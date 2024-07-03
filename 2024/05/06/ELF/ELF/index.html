@@ -1,0 +1,830 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN,en,default" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/head.jpg">
+  <link rel="icon" href="/img/head.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Dexter Morgan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="概述本文为对ELF结构的大致解析，意在Pwn 及Linu恶意代码方面打好基础,参考资料参考ELF文件格式分析(滕启明) -北京大学信息科学技术学院操作系统实验室 本文讨论的是32位下的文件结构，参考资料好像也是32位的 ELF  目标格式如上图，链接视图是磁盘文件的结构，执行视图是目标文件被加载到内存的结构 ELF头部描述了整个文件 程序头部表(Program Header Table) 被用于指">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ELF结构解析">
+<meta property="og:url" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/index.html">
+<meta property="og:site_name" content="Dexter">
+<meta property="og:description" content="概述本文为对ELF结构的大致解析，意在Pwn 及Linu恶意代码方面打好基础,参考资料参考ELF文件格式分析(滕启明) -北京大学信息科学技术学院操作系统实验室 本文讨论的是32位下的文件结构，参考资料好像也是32位的 ELF  目标格式如上图，链接视图是磁盘文件的结构，执行视图是目标文件被加载到内存的结构 ELF头部描述了整个文件 程序头部表(Program Header Table) 被用于指">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240506231459226.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240514223524467.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240506232420042.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240507205934323.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240507210010158.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240507210023104.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240507210232091.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240507210417017.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240507210718276.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240507210759846.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240507233552761.png">
+<meta property="article:published_time" content="2024-05-06T15:07:59.000Z">
+<meta property="article:modified_time" content="2024-07-02T03:48:15.996Z">
+<meta property="article:author" content="Dexter Morgan">
+<meta property="article:tag" content="ELF">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240506231459226.png">
+  
+  
+  
+  <title>ELF结构解析 - Dexter</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"dextermorgan0417.github.io","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"left","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":1},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 50vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Dexter</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/gamersky_01origin_01_20168131952B9E.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="ELF结构解析"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-05-06 23:07" pubdate>
+          2024年5月6日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          17 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="padding-left: 2rem; margin-right: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">ELF结构解析</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>本文为对ELF结构的大致解析，意在Pwn 及Linu恶意代码方面打好基础,参考资料参考ELF文件格式分析(滕启明) -北京大学信息科学技术学院操作系统实验室</p>
+<p>本文讨论的是32位下的文件结构，参考资料好像也是32位的</p>
+<h1 id="ELF"><a href="#ELF" class="headerlink" title="ELF"></a>ELF</h1><p><img src="/2024/05/06/ELF/ELF/image-20240506231459226.png" srcset="/img/loading.gif" lazyload alt="image-20240506231459226"></p>
+<p><img src="/2024/05/06/ELF/ELF/image-20240514223524467.png" srcset="/img/loading.gif" lazyload alt="image-20240514223524467"></p>
+<p>目标格式如上图，链接视图是磁盘文件的结构，执行视图是目标文件被加载到内存的结构</p>
+<p>ELF头部描述了整个文件</p>
+<p>程序头部表(Program Header Table) 被用于指导如何创造进程映像，被映射的目标文件必须具有程序头部表</p>
+<p>节区头部表(Section Heade Table) 描述了节区的相关信息，每个节区的信息都被包含在此</p>
+<p>除了ELF头部必须在开头，其他结构没有必定的顺序，因为有字段指明了其的文件偏移</p>
+<p><img src="/2024/05/06/ELF/ELF/image-20240506232420042.png" srcset="/img/loading.gif" lazyload alt="image-20240506232420042"></p>
+<h2 id="ELF头部"><a href="#ELF头部" class="headerlink" title="ELF头部"></a>ELF头部</h2><p>头部用以下结构表示</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-meta">#<span class="hljs-keyword">define</span> EI_NIDENT 16</span><br><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">struct</span>&#123; <br><span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> e_ident[EI_NIDENT];<br>Elf32_Half e_type;<br>Elf32_Half e_machine;<br>Elf32_Word e_version;<br>Elf32_Addr e_entry;<br>Elf32_Off e_phoff;<br>Elf32_Off e_shoff;<br>Elf32_Word e_flags;<br>Elf32_Half e_ehsize;<br>Elf32_Half e_phentsize;<br>Elf32_Half e_phnum;<br>Elf32_Half e_shentsize;<br>Elf32_Half e_shnum;<br>Elf32_Half e_shstrndx; <br>&#125;Elf32_Ehdr;<br></code></pre></td></tr></table></figure>
+
+<h3 id="e-ident"><a href="#e-ident" class="headerlink" title="e_ident"></a>e_ident</h3><p>0<del>3 EI_MAG0</del>3 是文件表示  魔数 .ELF</p>
+<p>4 EI_CLASS 文件类别  1:32位  2:64位 (为64位预留)</p>
+<p>5 EI_DATA 编码方式  1高位在前 (大端)  2低位在前 (小端)</p>
+<p>6 EI_VERSION 文件版本</p>
+<p>7 EI_PAD 0</p>
+<p>其余末尾全为0</p>
+<h3 id="e-type-目标文件类型"><a href="#e-type-目标文件类型" class="headerlink" title="e_type 目标文件类型"></a>e_type 目标文件类型</h3><ul>
+<li>1 ET_REL 可重定位文件 包含未链接的位置独立代码的文件</li>
+<li>2 ET_EXEC 可执行文件</li>
+<li>3 ET_DYN 共享目标文件 动态可链接的共享库</li>
+<li>4 ET_CORE 在程序崩溃或者进程传递了一个 SIGSEGV 信 号（分段违规）时，会在核心文件中记录整个进程的镜像信息。可以 使用 GDB 读取这类文件来辅助调试并查找程序崩溃的原因。</li>
+<li>0xff00 | 0xffff 特定处理器文件</li>
+</ul>
+<p>e_machine 目标体系结构</p>
+<ul>
+<li>1 AT&amp;T WE 32100</li>
+<li>2 SPARC</li>
+<li>3 Intel 80386</li>
+<li>4 Motorola 68000</li>
+<li>5 Motorola 88000</li>
+<li>7 Intel 80860</li>
+<li>8 MIPS RS3000</li>
+</ul>
+<p>e_version  目标文件版本  作用？？</p>
+<ul>
+<li>0 非法版本</li>
+<li>1 当前版本</li>
+</ul>
+<p>e_entry 程序入口的虚拟地址 可以为0</p>
+<p>e_phoff 程序头部表的偏移</p>
+<p>e_shoff 节区头部表的偏移</p>
+<p>e_flags 保留的标志</p>
+<p>e_ehsize ELF头部大小 (从此看出ELF头部大小不唯一)</p>
+<p>e_phentsize 程序头部表项大小</p>
+<p>e_phnum 程序头部表项数量</p>
+<p>e_shentsize 节区头部表项大小(不包括第一个NULL节区)</p>
+<p>e_shnum 节区头部表项数量</p>
+<p>e_shstrndx 节区头部表中与节区名称字符串表相关的表项的索引 (指明存储节区名字符串的节区的索引)</p>
+<h2 id="节区-Sections"><a href="#节区-Sections" class="headerlink" title="节区(Sections)"></a>节区(Sections)</h2><p>节区中包含目标文件中的所有信息，除了：ELF头部、程序头部表格、节区头部表格。节区满足以下条件：</p>
+<p> (1). 目标文件中的每个节区都有对应的节区头部描述它，反过来，有节区头部不意 味着有节区。 </p>
+<p>(2). 每个节区占用文件中一个连续字节区域（这个区域可能长度为 0）。 </p>
+<p>(3). 文件中的节区不能重叠，不允许一个字节存在于两个节区中的情况发生。</p>
+<p>(4). 目标文件中可能包含非活动空间（INACTIVE SPACE）。这些区域不属于任何 头部和节区，其内容未指定。</p>
+<h2 id="节区头部表格"><a href="#节区头部表格" class="headerlink" title="节区头部表格"></a>节区头部表格</h2><p>ELF头部中的 e_shoff 给出了节区头部表的偏移，e_shnum 给出表格中条目数目；e_shentsize 给出每个项的字节数，由此所有节区的大小长度就确定了</p>
+<p>节区头部表中几个特殊的下标项</p>
+<ul>
+<li>0 未使用</li>
+<li>0xff00 保留的下界</li>
+<li>0xff1f 保留</li>
+</ul>
+<p>节区头部</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">struct</span>&#123; <br>Elf32_Word sh_name;<br>Elf32_Word sh_type;<br>Elf32_Word sh_flags;<br>Elf32_Addr sh_addr;<br>Elf32_Off sh_offset; <br>Elf32_Word sh_size;<br>Elf32_Word sh_link;<br>Elf32_Word sh_info;<br>Elf32_Word sh_addralign;<br>Elf32_Word sh_entsize; <br>&#125;Elf32_Shdr;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>sh_name 节区头部字符串表索引 (在节区字符串节中的NameString偏移)</li>
+<li>sh_type 节区类型</li>
+<li>sh_flags 标志</li>
+<li>sh_addr 如果节区被映射到内存 为节区起始地址</li>
+<li>sh_offset 节区的文件偏移</li>
+<li>sh_size 节区长度</li>
+<li>sh_link 节区头部表索引链接</li>
+<li>sh_info 附加信息</li>
+<li>sh_addralign 节区起始地址的对齐宽度 sh_addr % sh_addralign &#x3D;&#x3D;0 </li>
+<li>sh_entsize 若节区也是类似数据的结构(例如符号表) 给出每个项的长度</li>
+</ul>
+<p><img src="/2024/05/06/ELF/ELF/image-20240507205934323.png" srcset="/img/loading.gif" lazyload alt="image-20240507205934323"></p>
+<h3 id="sh-type"><a href="#sh-type" class="headerlink" title="sh_type"></a>sh_type</h3><p><img src="/2024/05/06/ELF/ELF/image-20240507210010158.png" srcset="/img/loading.gif" lazyload alt="image-20240507210010158"></p>
+<p><img src="/2024/05/06/ELF/ELF/image-20240507210023104.png" srcset="/img/loading.gif" lazyload alt="image-20240507210023104"></p>
+<h3 id="sh-flags"><a href="#sh-flags" class="headerlink" title="sh_flags"></a>sh_flags</h3><p>sh_flags 字段定义了一个节区中包含的内容是否可以修改、是否可以执行等信息。 如果一个标志位被设置，则该位取值为 1。未定义的各位都设置为 0</p>
+<p><img src="/2024/05/06/ELF/ELF/image-20240507210232091.png" srcset="/img/loading.gif" lazyload alt="image-20240507210232091"></p>
+<h3 id="sh-link-和-sh-info"><a href="#sh-link-和-sh-info" class="headerlink" title="sh_link 和 sh_info"></a>sh_link 和 sh_info</h3><p><img src="/2024/05/06/ELF/ELF/image-20240507210417017.png" srcset="/img/loading.gif" lazyload alt="image-20240507210417017"></p>
+<h3 id="特殊节区"><a href="#特殊节区" class="headerlink" title="特殊节区"></a>特殊节区</h3><p><img src="/2024/05/06/ELF/ELF/image-20240507210718276.png" srcset="/img/loading.gif" lazyload alt="image-20240507210718276"></p>
+<p><img src="/2024/05/06/ELF/ELF/image-20240507210759846.png" srcset="/img/loading.gif" lazyload alt="image-20240507210759846"></p>
+<p>以.开头的名称是系统保留的</p>
+<h2 id="字符串表"><a href="#字符串表" class="headerlink" title="字符串表"></a>字符串表</h2><p>字符串表也属于节区 包含以NULL结尾的字符串</p>
+<p>开头和末尾一字节均为0</p>
+<h2 id="符号表"><a href="#符号表" class="headerlink" title="符号表"></a>符号表</h2><p>符号表中包含用来定位、重定位程序中符号定义和引用的信息</p>
+<p>表项结构如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> &#123;</span><br>Elf32_Word st_name; <br>Elf32_Addr st_value;<br>Elf32_Word st_size; <br><span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> st_info; <br><span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> st_other; <br>Elf32_Half st_shndx;<br> &#125; Elf32_sym; <br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>st_name 包含目标文件符号字符串表的索引  （如何查找符号字符串表）</li>
+<li>st_value  符号的值，表示符号在文件中的地址或者偏移量。对于变量，通常是它在内存中的地址；对于函数，通常是它在文件中的偏移量。</li>
+<li>st_size 符号相关的尺寸大小</li>
+<li>st_info 符号的类型和绑定属性</li>
+<li>st_other 0 无定义</li>
+<li>st_shndx 给出相关的节区头部表索引</li>
+</ul>
+<h3 id="关于-st-info-的说明"><a href="#关于-st-info-的说明" class="headerlink" title="关于 st_info 的说明"></a>关于 st_info 的说明</h3><h2 id="重定位表"><a href="#重定位表" class="headerlink" title="重定位表"></a>重定位表</h2><p>表项结构如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">struct</span> &#123;<br>Elf32_Addr r_offset;<br>Elf32_Word r_info;<br>&#125; Elf32_Rel;<br><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">struct</span> &#123;<br>Elf32_Addr r_offset;<br>Elf32_Word r_info;<br>Elf32_Word r_addend;<br>&#125; Elf32_Rela; <br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>r_offset 给出重定位的位置  对可重定位文件 此值是相比于节区头部的偏移 对可执行文件或共享目标文件 此值是虚拟地址</li>
+<li>r_info 要进行重定位的符号表的索引</li>
+<li>r_addend 常量补齐，用来计算将被填充到可重定位字段的数值 ???</li>
+</ul>
+<p>重定位节区会引用两个其它节区：符号表、要修改的节区。节区头部的 sh_info 和 sh_link 成员给出这些关系。不同目标文件的重定位表项对 r_offset 成员具有略微不同的解释。</p>
+<p>(1). 在可重定位文件中，r_offset 中包含节区偏移。就是说重定位节区自身 描述了如何修改文件中的其他节区；重定位偏移 指定了被修改节区中的 一个存储单元。  </p>
+<p>(2). 在可执行文件和共享的目标文件中，r_offset 中包含一个虚拟地址。为 了使得这些文件的重定位表项对动态链接器更为有用，节区偏移（针对文 件的解释）让位于虚地址（针对内存的解释）。 </p>
+<h2 id="程序头部-Program-Header"><a href="#程序头部-Program-Header" class="headerlink" title="程序头部(Program Header)"></a>程序头部(Program Header)</h2><p>可执行文件或者共享目标文件的程序头部是一个结构数组，每个结构描述了一个段 或者系统准备程序执行所必需的其它信息。目标文件的“段”包含一个或者多个“节区”， 也就是“段内容（Segment Contents）”。程序头部仅对于可执行文件和共享目标文件有意义。</p>
+<p>指明了段的信息,不是所有段都由文件中的内容所映射，例如.bss</p>
+<p>依照ELF头部的e_phentsize e_phnum 字段可确定程序头部表大小</p>
+<p>程序头部表项结构如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> &#123;</span><br>Elf32_Word p_type;<br>Elf32_Off p_offset;<br>Elf32_Addr p_vaddr;<br>Elf32_Addr p_paddr;<br>Elf32_Word p_filesz;<br>Elf32_Word p_memsz;<br>Elf32_Word p_flags;<br>Elf32_Word p_align;<br>&#125; Elf32_phdr; <br><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p>p_type 段的类型</p>
+</li>
+<li><p>p_offset 文件头到段基址的偏移</p>
+</li>
+<li><p>p_vaddr 段基址</p>
+</li>
+<li><p>p_paddr 仅用于与物理地址相关的系统中</p>
+</li>
+<li><p>p_filesz 段在文件映像的大小</p>
+</li>
+<li><p>p_memsz 段在内存映像的大小</p>
+</li>
+<li><p>p_flags 段权限 rwx</p>
+</li>
+<li><p>p_align 对齐值 (p_vaddr | p_offset ) % p_align &#x3D;&#x3D;0</p>
+<p>p_offset p_filesz  指明了段包含了哪些节，且推出在相同段的节区在文件中一定是相邻的</p>
+<p>段类型</p>
+</li>
+</ul>
+<p><img src="/2024/05/06/ELF/ELF/image-20240507233552761.png" srcset="/img/loading.gif" lazyload alt="image-20240507233552761"></p>
+<p>PT_LOAD 段可装载</p>
+<p>PT_DYNAMIC——动态段的 Phdr  </p>
+<p>动态段是动态链接可执行文件所特有的，包含了动态链接器所必需的一些 信息。在动态段中包含了一些标记值和指针，包括但不限于以下内容： z 运行时需要链接的共享库列表； z 全局偏移表（GOT）的地址——ELF 动态链接部分（2.6 节）会讨论； z 重定位条目的相关信息</p>
+<p>PT_INTERP </p>
+<p>PT_INTERP 段只将位置和大小信息存放在一个以 null 为终止符的字符串 中，是对程序解释器位置的描述。例如，&#x2F;lib&#x2F;linux-ld.so.2 一般是指 动态链接器的位置，也即程序解释器的位置。</p>
+<h1 id="疑问"><a href="#疑问" class="headerlink" title="疑问"></a>疑问</h1>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ELF/" class="category-chain-item">ELF</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/ELF/" class="print-no-link">#ELF</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>ELF结构解析</div>
+      <div>https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Dexter Morgan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年5月6日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar category-bar" style="margin-left: -1rem">
+    
+
+
+
+
+
+<div class="category-list">
+  
+  
+    
+    
+    
+    <div class="category row nomargin-x">
+      <a class="category-item 
+          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="ELF"
+        id="heading-b61b2d6c6fa62903b882aaa53452c111" role="tab" data-toggle="collapse" href="#collapse-b61b2d6c6fa62903b882aaa53452c111"
+        aria-expanded="true"
+      >
+        ELF
+        <span class="list-group-count">(1)</span>
+        <i class="iconfont icon-arrowright"></i>
+      </a>
+      
+      <div class="category-collapse collapse show" id="collapse-b61b2d6c6fa62903b882aaa53452c111"
+           role="tabpanel" aria-labelledby="heading-b61b2d6c6fa62903b882aaa53452c111">
+        
+        
+          
+  <div class="category-post-list">
+    
+    
+      
+      
+        <a href="/2024/05/06/ELF/ELF/" title="ELF结构解析"
+           class="list-group-item list-group-item-action
+           active">
+          <span class="category-post">ELF结构解析</span>
+        </a>
+      
+    
+  </div>
+
+        
+      </div>
+    </div>
+  
+</div>
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <span>Dexter</span></a> <span>Morgan</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,934 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN,en,default" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/head.jpg">
+  <link rel="icon" href="/img/head.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Dexter Morgan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="简介pwntools相关说明,参照https:&#x2F;&#x2F;docs.pwntools.com&#x2F; context全局环境变量 arch  目标架构常用: amd64 i386 arm mips os 目标操作系统默认linux GDBBreakpoint类pwnlib.gdb.attach函数原型 1pwnlib.gdb.attach(target, gdbscript&#x3D;&#x27;&#x27;, exe&#x3D;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pwntools">
+<meta property="og:url" content="https://dextermorgan0417.github.io/2024/06/15/Pwn/Pwntools/index.html">
+<meta property="og:site_name" content="Dexter">
+<meta property="og:description" content="简介pwntools相关说明,参照https:&#x2F;&#x2F;docs.pwntools.com&#x2F; context全局环境变量 arch  目标架构常用: amd64 i386 arm mips os 目标操作系统默认linux GDBBreakpoint类pwnlib.gdb.attach函数原型 1pwnlib.gdb.attach(target, gdbscript&#x3D;&#x27;&#x27;, exe&#x3D;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-06-15T08:25:25.000Z">
+<meta property="article:modified_time" content="2024-06-30T07:18:12.574Z">
+<meta property="article:author" content="Dexter Morgan">
+<meta property="article:tag" content="Pwn">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Pwntools - Dexter</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"dextermorgan0417.github.io","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"left","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":1},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 50vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Dexter</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/gamersky_01origin_01_20168131952B9E.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Pwntools"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-06-15 16:25" pubdate>
+          2024年6月15日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          14 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="padding-left: 2rem; margin-right: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Pwntools</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>pwntools相关说明,参照<a target="_blank" rel="noopener" href="https://docs.pwntools.com/">https://docs.pwntools.com/</a></p>
+<h1 id="context"><a href="#context" class="headerlink" title="context"></a>context</h1><p>全局环境变量</p>
+<h2 id="arch-目标架构"><a href="#arch-目标架构" class="headerlink" title="arch  目标架构"></a>arch  目标架构</h2><p>常用: amd64 i386 arm mips</p>
+<h2 id="os-目标操作系统"><a href="#os-目标操作系统" class="headerlink" title="os 目标操作系统"></a>os 目标操作系统</h2><p>默认linux</p>
+<h1 id="GDB"><a href="#GDB" class="headerlink" title="GDB"></a>GDB</h1><h2 id="Breakpoint类"><a href="#Breakpoint类" class="headerlink" title="Breakpoint类"></a>Breakpoint类</h2><h2 id="pwnlib-gdb-attach"><a href="#pwnlib-gdb-attach" class="headerlink" title="pwnlib.gdb.attach"></a>pwnlib.gdb.attach</h2><p>函数原型</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">pwnlib.gdb.attach(target, gdbscript=<span class="hljs-string">&#x27;&#x27;</span>, exe=<span class="hljs-literal">None</span>, gdb_args=<span class="hljs-literal">None</span>, ssh=<span class="hljs-literal">None</span>, sysroot=<span class="hljs-literal">None</span>, api=<span class="hljs-literal">False</span>)<br></code></pre></td></tr></table></figure>
+
+<p>函数功能：在新终端中启动 GDB 并附加到目标</p>
+<p>参数解释</p>
+<ul>
+<li><code>target</code> – 要附加的目标。</li>
+<li><code>gdbscript</code> (str 或 file) – 附加后运行的 GDB 脚本。</li>
+<li><code>exe</code> (str) – 目标二进制文件的路径。</li>
+<li><code>arch</code> (str) – 目标二进制文件的架构。如果已知 <code>exe</code>，GDB 会自动检测架构（如果支持）。</li>
+<li><code>gdb_args</code> (list) – 传递给 GDB 的附加参数列表。</li>
+<li><code>ssh</code> (optional) – SSH 会话对象，用于远程调试。</li>
+<li><code>sysroot</code> (str) – 设置备用系统根目录。系统根目录用于加载绝对共享库符号文件。这对于指示 GDB 加载本地版本的二进制文件&#x2F;库而不是从 gdbserver 下载它们非常有用，这样更快。</li>
+<li><code>api</code> (bool) – 启用对 GDB Python API 的访问。</li>
+</ul>
+<p>返回值 :GDB 进程的 PID（或运行 GDB 的窗口）。当 <code>api=True</code> 时，返回一个 <code>(PID, Gdb)</code> 元组。</p>
+<h2 id="pwnlib-gdb-debug"><a href="#pwnlib-gdb-debug" class="headerlink" title="pwnlib.gdb.debug"></a>pwnlib.gdb.debug</h2><p>原型</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">pwnlib.gdb.debug(args, gdbscript=<span class="hljs-literal">None</span>, exe=<span class="hljs-literal">None</span>, ssh=<span class="hljs-literal">None</span>, env=<span class="hljs-literal">None</span>, sysroot=<span class="hljs-literal">None</span>, api=<span class="hljs-literal">False</span>, **kwargs)<br></code></pre></td></tr></table></figure>
+
+<p>参数</p>
+<ul>
+<li><code>args</code> (list) – 传递给进程的参数，类似于 <code>process</code>。</li>
+<li><code>gdbscript</code> (str) – 要运行的 GDB 脚本。</li>
+<li><code>exe</code> (str) – 磁盘上可执行文件的路径。</li>
+<li><code>env</code> (dict) – 启动二进制文件的环境变量。</li>
+<li><code>ssh</code> (ssh) – 用于启动进程的远程 SSH 会话。</li>
+<li><code>sysroot</code> (str) – 设置备用系统根目录。系统根目录用于加载绝对共享库符号文件。这对于指示 GDB 加载本地版本的二进制文件&#x2F;库而不是从 gdbserver 下载它们非常有用，这样更快。</li>
+<li><code>api</code> (bool) – 启用对 GDB Python API 的访问。</li>
+</ul>
+<p>返回值 <code>process</code> 或 <code>ssh_channel</code> – 一个连接到目标进程的管道。当 <code>api=True</code> 时，返回对象的 <code>gdb</code> 成员包含一个 <code>Gdb</code> 实例。</p>
+<h2 id="pwnlib-gdb-debug-assembly"><a href="#pwnlib-gdb-debug-assembly" class="headerlink" title="pwnlib.gdb.debug_assembly"></a>pwnlib.gdb.debug_assembly</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">pwnlib.gdb.debug_assembly(asm, gdbscript=<span class="hljs-literal">None</span>, vma=<span class="hljs-literal">None</span>, api=<span class="hljs-literal">False</span>)<br></code></pre></td></tr></table></figure>
+
+<p>创建ELF文件并加载asm_code并使用调试器启动</p>
+<ul>
+<li><strong>asm</strong> (<a target="_blank" rel="noopener" href="https://docs.python.org/3.8/library/stdtypes.html#str"><em>str</em></a>) – 加载的shellcode</li>
+<li><strong>gdbscript</strong> (<a target="_blank" rel="noopener" href="https://docs.python.org/3.8/library/stdtypes.html#str"><em>str</em></a>) – gdb脚本</li>
+<li><strong>vma</strong> (<a target="_blank" rel="noopener" href="https://docs.python.org/3.8/library/functions.html#int"><em>int</em></a>) – shellcode加载基址</li>
+<li><strong>api</strong> (<a target="_blank" rel="noopener" href="https://docs.python.org/3.8/library/functions.html#bool"><em>bool</em></a>) – 启用对 GDB Python API 的访问</li>
+<li>*<strong>*kwargs</strong> – 重写 <a target="_blank" rel="noopener" href="https://docs.pwntools.com/en/stable/context.html#pwnlib.context.context"><code>pwnlib.context.context</code></a> 变量</li>
+</ul>
+<p>返回process对象</p>
+<h2 id="pwnlib-gdb-debug-shellcode"><a href="#pwnlib-gdb-debug-shellcode" class="headerlink" title="pwnlib.gdb.debug_shellcode"></a>pwnlib.gdb.debug_shellcode</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">pwnlib.gdb.debug_shellcode(data, gdbscript=<span class="hljs-literal">None</span>, vma=<span class="hljs-literal">None</span>, api=<span class="hljs-literal">False</span>)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>data</strong> (<a target="_blank" rel="noopener" href="https://docs.python.org/3.8/library/stdtypes.html#str"><em>str</em></a>) – 已汇编的 shellcode 字节</li>
+<li><strong>gdbscript</strong> (<a target="_blank" rel="noopener" href="https://docs.python.org/3.8/library/stdtypes.html#str"><em>str</em></a>) – gdb脚本</li>
+<li><strong>vma</strong> (<a target="_blank" rel="noopener" href="https://docs.python.org/3.8/library/functions.html#int"><em>int</em></a>) – shellcode加载基址</li>
+<li><strong>api</strong> (<a target="_blank" rel="noopener" href="https://docs.python.org/3.8/library/functions.html#bool"><em>bool</em></a>) – 启用对 GDB Python API 的访问</li>
+<li>*<strong>*kwargs</strong> – 重写 <a target="_blank" rel="noopener" href="https://docs.pwntools.com/en/stable/context.html#pwnlib.context.context"><code>pwnlib.context.context</code></a> 变量</li>
+</ul>
+<h2 id="debug-assembly和debug-shellcode区别"><a href="#debug-assembly和debug-shellcode区别" class="headerlink" title="debug_assembly和debug_shellcode区别"></a>debug_assembly和debug_shellcode区别</h2><ul>
+<li>第一个参数不同</li>
+<li>debug_assembly 会处理代码中的符号</li>
+</ul>
+<h1 id="tubes"><a href="#tubes" class="headerlink" title="tubes"></a>tubes</h1><p>pwnlib.tubes 模块是 Pwntools（一个安全和利用框架）中用于与各种通信通道进行交互的统一 API</p>
+<h2 id="pwnlib-tubes-process-process"><a href="#pwnlib-tubes-process-process" class="headerlink" title="pwnlib.tubes.process.process"></a>pwnlib.tubes.process.process</h2><p>本身是一个类，其构造函数返回这个类</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">pwnlib</span>.tubes.process.process(argv=<span class="hljs-literal">None</span>, shell=<span class="hljs-literal">False</span>, executable=<span class="hljs-literal">None</span>, cwd=<span class="hljs-literal">None</span>, env=<span class="hljs-literal">None</span>, stdin=-<span class="hljs-number">1</span>, stdout=&lt;pwnlib.tubes.process.PTY <span class="hljs-built_in">object</span>&gt;, stderr=-<span class="hljs-number">2</span>, close_fds=<span class="hljs-literal">True</span>, preexec_fn=&lt;function process.&lt;<span class="hljs-keyword">lambda</span>&gt;&gt;, raw=<span class="hljs-literal">True</span>, aslr=<span class="hljs-literal">None</span>, setuid=<span class="hljs-literal">None</span>, where=<span class="hljs-string">&#x27;local&#x27;</span>, display=<span class="hljs-literal">None</span>, alarm=<span class="hljs-literal">None</span>, *args, **kwargs)<br></code></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li><code>argv</code> (list): 要传递给新进程的参数列表。</li>
+<li><code>shell</code> (bool): 如果设置为True，将<code>argv</code>解释为一个传递给shell解释的字符串，而不是参数列表。</li>
+<li><code>executable</code> (str): 要执行的二进制文件路径。如果为None，使用<code>argv[0]</code>。不能与<code>shell</code>一起使用。</li>
+<li><code>cwd</code> (str): 工作目录。默认为当前工作目录。</li>
+<li><code>env</code> (dict): 环境变量。默认继承Python的环境。</li>
+<li><code>stdin</code> (int): 用于stdin的文件对象或文件描述符编号。默认使用管道。通过设置为PTY可以使用伪终端，这将导致程序以交互方式运行（例如，Python将显示<code>&gt;&gt;&gt;</code>提示符）。如果应用程序直接从<code>/dev/tty</code>读取，请使用伪终端。</li>
+<li><code>stdout</code> (int): 用于stdout的文件对象或文件描述符编号。默认使用伪终端，以禁用libc例程的任何stdout缓冲。也可以是PIPE，以使用普通管道。</li>
+<li><code>stderr</code> (int): 用于stderr的文件对象或文件描述符编号。默认使用STDOUT。也可以是PIPE，以使用单独的管道，尽管pwnlib.tubes.tube.tube封装将无法读取此数据。</li>
+<li><code>close_fds</code> (bool): 关闭除stdin、stdout、stderr以外的所有打开的文件描述符。默认值为True。</li>
+<li><code>preexec_fn</code> (callable): 在调用execve之前立即调用的可调用对象。</li>
+<li><code>raw</code> (bool): 将创建的伪终端设置为原始模式（即禁用回显和控制字符）。默认值为True。如果未创建伪终端，则此设置无效。</li>
+<li><code>aslr</code> (bool): 如果设置为False，通过personality（setarch -R）和setrlimit（ulimit -s unlimited）禁用ASLR。这将禁用目标进程的ASLR。然而，如果执行了setuid二进制文件，则setarch的更改将丢失。默认值继承自context.aslr。有关其他选项和信息，请参见setuid。</li>
+<li><code>setuid</code> (bool): 用于控制目标二进制文件的setuid状态以及相应的操作。默认值为None，因此不做任何假设。如果为True，将目标二进制文件视为setuid。如果<code>aslr=False</code>，这将修改用于禁用进程上的ASLR的机制。这对于在本地调试时非常有用，当漏洞利用是一个setuid二进制文件时。如果为False，防止目标二进制文件上的setuid位生效。此功能仅在Linux上支持，内核版本需为v3.5或更高。</li>
+<li><code>where</code> (str): 进程运行的位置，用于日志记录。</li>
+<li><code>display</code> (list): 要显示的参数列表，而不是主可执行文件名。</li>
+<li><code>alarm</code> (int): 在进程上设置一个SIGALRM报警超时。</li>
+</ul>
+<p>process类常用方法</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python">close() <span class="hljs-comment">#关闭管道</span><br>kill() <span class="hljs-comment">#杀死子进程</span><br>leak(address, count=<span class="hljs-number">1</span>) <span class="hljs-comment">#泄露子进程在指定地址处的内存</span><br>-address (<span class="hljs-built_in">int</span>): 要泄露内存的起始地址。<br>-count (<span class="hljs-built_in">int</span>): 要泄露的字节数，默认为<span class="hljs-number">1</span>。<br>libs() -&gt; <span class="hljs-built_in">dict</span>: <span class="hljs-comment">#返回一个字典，将每个共享库的路径映射到它在进程地址空间中的加载地址</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="pwnlib-elf-elf"><a href="#pwnlib-elf-elf" class="headerlink" title="pwnlib.elf.elf"></a>pwnlib.elf.elf</h1><h2 id="class-pwnlib-elf-elf-ELF-path-checksec-True"><a href="#class-pwnlib-elf-elf-ELF-path-checksec-True" class="headerlink" title="class pwnlib.elf.elf.ELF(path, checksec&#x3D;True)"></a>class pwnlib.elf.elf.ELF(path, checksec&#x3D;True)</h2><p>-path 文件路径</p>
+<p>-checksec 是否使用checksec</p>
+<h2 id="bss-offset"><a href="#bss-offset" class="headerlink" title="bss(offset)"></a>bss(offset)</h2><p>返回对bss的偏移地址</p>
+<h2 id="symbols"><a href="#symbols" class="headerlink" title="symbols"></a>symbols</h2><p>符号到地址的映射字典</p>
+<h2 id="got"><a href="#got" class="headerlink" title="got"></a>got</h2><p>got表条目到地址的映射的字典</p>
+<h2 id="plt"><a href="#plt" class="headerlink" title="plt"></a>plt</h2><p>plt表条目到地址的映射的字典</p>
+<h1 id="dynelf"><a href="#dynelf" class="headerlink" title="dynelf"></a>dynelf</h1><h1 id="asm"><a href="#asm" class="headerlink" title="asm"></a>asm</h1><h2 id="asm-1"><a href="#asm-1" class="headerlink" title="asm"></a>asm</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">pwnlib.asm.asm(code, vma = <span class="hljs-number">0</span>, extract = <span class="hljs-literal">True</span>, shared = <span class="hljs-literal">False</span>, ...)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>code (str)</code> – 要汇编的汇编代码。</li>
+<li><code>vma (int)</code> – 汇编开始的虚拟内存地址。</li>
+<li><code>extract (bool)</code> – 从汇编文件中提取原始汇编字节。如果为 False，则返回包含嵌入汇编的 ELF 文件的路径。</li>
+<li><code>shared (bool)</code> – 创建一个共享对象。</li>
+<li><code>kwargs (dict)</code> – 可以设置任何 <code>context</code> 上的属性，例如 <code>set arch=&#39;arm&#39;</code>。</li>
+</ul>
+<h1 id="辅助函数"><a href="#辅助函数" class="headerlink" title="辅助函数"></a>辅助函数</h1><h2 id="PrintProcessMemoryBase"><a href="#PrintProcessMemoryBase" class="headerlink" title="PrintProcessMemoryBase"></a>PrintProcessMemoryBase</h2><p>打印process对象的映射的共享库的加载基址</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">PrintProcessMemoryBase</span>(<span class="hljs-params">p</span>):<br>    a=p.libs()<br>    <span class="hljs-keyword">for</span> key,value <span class="hljs-keyword">in</span> a.items():<br>        <span class="hljs-built_in">print</span>(key+<span class="hljs-string">&quot; -&gt; &quot;</span>+<span class="hljs-built_in">hex</span>(value))<br></code></pre></td></tr></table></figure>
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Pwn/" class="category-chain-item">Pwn</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Pwn/" class="print-no-link">#Pwn</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Pwntools</div>
+      <div>https://dextermorgan0417.github.io/2024/06/15/Pwn/Pwntools/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Dexter Morgan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年6月15日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar category-bar" style="margin-left: -1rem">
+    
+
+
+
+
+
+<div class="category-list">
+  
+  
+    
+    
+    
+    <div class="category row nomargin-x">
+      <a class="category-item 
+          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="Pwn"
+        id="heading-db82544b8ffa8553f7150ded7d592ee9" role="tab" data-toggle="collapse" href="#collapse-db82544b8ffa8553f7150ded7d592ee9"
+        aria-expanded="true"
+      >
+        Pwn
+        <span class="list-group-count">(12)</span>
+        <i class="iconfont icon-arrowright"></i>
+      </a>
+      
+      <div class="category-collapse collapse show" id="collapse-db82544b8ffa8553f7150ded7d592ee9"
+           role="tabpanel" aria-labelledby="heading-db82544b8ffa8553f7150ded7d592ee9">
+        
+        
+          
+          
+  <div class="category-post-list">
+    
+    
+      
+      
+        <a href="/2024/06/09/Pwn/House-of-apple2/" title="House-of-apple2"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">House-of-apple2</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/06/15/Pwn/Pwntools/" title="Pwntools"
+           class="list-group-item list-group-item-action
+           active">
+          <span class="category-post">Pwntools</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/16/Pwn/Pwn%E5%87%BA%E9%A2%98/" title="Pwn出题"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Pwn出题</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/14/Pwn/Pwn%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/" title="Pwn常用命令"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Pwn常用命令</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/20/Pwn/Pwn%E6%9D%82%E8%B0%88/" title="Pwn杂谈"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Pwn杂谈</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/14/Pwn/ShellCode/" title="ShellCode"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">ShellCode</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/14/Pwn/awd/" title="awd"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">awd</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/03/glibc/glibc/" title="glibc命名"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">glibc命名</span>
+        </a>
+      
+    
+  </div>
+
+          
+  
+    
+    
+    
+    <div class="category-sub row nomargin-x">
+      <a class="category-subitem collapsed
+          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="Heap"
+        id="heading-556e9a86db9c921373c6b5097817214a" role="tab" data-toggle="collapse" href="#collapse-556e9a86db9c921373c6b5097817214a"
+        aria-expanded="false"
+      >
+        Heap
+        <span class="list-group-count">(1)</span>
+        <i class="iconfont icon-arrowright"></i>
+      </a>
+      
+      <div class="category-collapse collapse " id="collapse-556e9a86db9c921373c6b5097817214a"
+           role="tabpanel" aria-labelledby="heading-556e9a86db9c921373c6b5097817214a">
+        
+        
+          
+  <div class="category-post-list">
+    
+    
+      
+      
+        <a href="/2024/05/05/Pwn/UnsortedbinAttack/" title="Unsorted bin Attack"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Unsorted bin Attack</span>
+        </a>
+      
+    
+  </div>
+
+        
+      </div>
+    </div>
+  
+    
+    
+    
+    <div class="category-sub row nomargin-x">
+      <a class="category-subitem collapsed
+          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="IO"
+        id="heading-cf3882f1c43ab22bff0bd9d82d83251b" role="tab" data-toggle="collapse" href="#collapse-cf3882f1c43ab22bff0bd9d82d83251b"
+        aria-expanded="false"
+      >
+        IO
+        <span class="list-group-count">(3)</span>
+        <i class="iconfont icon-arrowright"></i>
+      </a>
+      
+      <div class="category-collapse collapse " id="collapse-cf3882f1c43ab22bff0bd9d82d83251b"
+           role="tabpanel" aria-labelledby="heading-cf3882f1c43ab22bff0bd9d82d83251b">
+        
+        
+          
+  <div class="category-post-list">
+    
+    
+      
+      
+        <a href="/2024/05/10/Pwn/IO/FSOP/" title="FSOP"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">FSOP</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/31/Pwn/IO/IOCheck/" title="IOCheck"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">IOCheck</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/10/Pwn/IO/IO/" title="IO简述"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">IO简述</span>
+        </a>
+      
+    
+  </div>
+
+        
+      </div>
+    </div>
+  
+        
+      </div>
+    </div>
+  
+</div>
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <span>Dexter</span></a> <span>Morgan</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
