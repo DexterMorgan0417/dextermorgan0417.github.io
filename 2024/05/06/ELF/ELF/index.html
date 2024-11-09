@@ -16,12 +16,12 @@
   <meta name="author" content="Dexter Morgan">
   <meta name="keywords" content="">
   
-    <meta name="description" content="概述本文为对ELF结构的大致解析，意在Pwn 及Linu恶意代码方面打好基础,参考资料参考ELF文件格式分析(滕启明) -北京大学信息科学技术学院操作系统实验室 本文讨论的是32位下的文件结构，参考资料好像也是32位的 ELF  目标格式如上图，链接视图是磁盘文件的结构，执行视图是目标文件被加载到内存的结构 ELF头部描述了整个文件 程序头部表(Program Header Table) 被用于指">
+    <meta name="description" content="概述本文为对ELF结构的大致解析，意在Pwn 及Linu恶意代码方面打好基础,参考资料参考ELF文件格式分析(滕启明) -北京大学信息科学技术学院操作系统实验室 本文讨论的是32位下的文件结构，参考资料好像也是32位的   目标格式如上图，链接视图是磁盘文件的结构，执行视图是目标文件被加载到内存的结构 ELF头部描述了整个文件 程序头部表(Program Header Table) 被用于指导如何">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ELF结构解析">
 <meta property="og:url" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/index.html">
 <meta property="og:site_name" content="Dexter">
-<meta property="og:description" content="概述本文为对ELF结构的大致解析，意在Pwn 及Linu恶意代码方面打好基础,参考资料参考ELF文件格式分析(滕启明) -北京大学信息科学技术学院操作系统实验室 本文讨论的是32位下的文件结构，参考资料好像也是32位的 ELF  目标格式如上图，链接视图是磁盘文件的结构，执行视图是目标文件被加载到内存的结构 ELF头部描述了整个文件 程序头部表(Program Header Table) 被用于指">
+<meta property="og:description" content="概述本文为对ELF结构的大致解析，意在Pwn 及Linu恶意代码方面打好基础,参考资料参考ELF文件格式分析(滕启明) -北京大学信息科学技术学院操作系统实验室 本文讨论的是32位下的文件结构，参考资料好像也是32位的   目标格式如上图，链接视图是磁盘文件的结构，执行视图是目标文件被加载到内存的结构 ELF头部描述了整个文件 程序头部表(Program Header Table) 被用于指导如何">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240506231459226.png">
 <meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240514223524467.png">
@@ -33,9 +33,12 @@
 <meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240507210417017.png">
 <meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240507210718276.png">
 <meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240507210759846.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240712105238277.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240712105341236.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240712105352001.png">
 <meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/06/ELF/ELF/image-20240507233552761.png">
 <meta property="article:published_time" content="2024-05-06T15:07:59.000Z">
-<meta property="article:modified_time" content="2024-07-02T03:48:15.996Z">
+<meta property="article:modified_time" content="2024-07-12T07:46:06.910Z">
 <meta property="article:author" content="Dexter Morgan">
 <meta property="article:tag" content="ELF">
 <meta name="twitter:card" content="summary_large_image">
@@ -232,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2k 字
+          2.4k 字
         
       </span>
     
@@ -243,7 +246,7 @@
         
         
         
-          17 分钟
+          21 分钟
         
       </span>
     
@@ -300,7 +303,7 @@
                 
                 <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>本文为对ELF结构的大致解析，意在Pwn 及Linu恶意代码方面打好基础,参考资料参考ELF文件格式分析(滕启明) -北京大学信息科学技术学院操作系统实验室</p>
 <p>本文讨论的是32位下的文件结构，参考资料好像也是32位的</p>
-<h1 id="ELF"><a href="#ELF" class="headerlink" title="ELF"></a>ELF</h1><p><img src="/2024/05/06/ELF/ELF/image-20240506231459226.png" srcset="/img/loading.gif" lazyload alt="image-20240506231459226"></p>
+<p><img src="/2024/05/06/ELF/ELF/image-20240506231459226.png" srcset="/img/loading.gif" lazyload alt="image-20240506231459226"></p>
 <p><img src="/2024/05/06/ELF/ELF/image-20240514223524467.png" srcset="/img/loading.gif" lazyload alt="image-20240514223524467"></p>
 <p>目标格式如上图，链接视图是磁盘文件的结构，执行视图是目标文件被加载到内存的结构</p>
 <p>ELF头部描述了整个文件</p>
@@ -308,7 +311,7 @@
 <p>节区头部表(Section Heade Table) 描述了节区的相关信息，每个节区的信息都被包含在此</p>
 <p>除了ELF头部必须在开头，其他结构没有必定的顺序，因为有字段指明了其的文件偏移</p>
 <p><img src="/2024/05/06/ELF/ELF/image-20240506232420042.png" srcset="/img/loading.gif" lazyload alt="image-20240506232420042"></p>
-<h2 id="ELF头部"><a href="#ELF头部" class="headerlink" title="ELF头部"></a>ELF头部</h2><p>头部用以下结构表示</p>
+<h1 id="ELF头部"><a href="#ELF头部" class="headerlink" title="ELF头部"></a>ELF头部</h1><p>头部用以下结构表示</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-meta">#<span class="hljs-keyword">define</span> EI_NIDENT 16</span><br><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">struct</span>&#123; <br><span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> e_ident[EI_NIDENT];<br>Elf32_Half e_type;<br>Elf32_Half e_machine;<br>Elf32_Word e_version;<br>Elf32_Addr e_entry;<br>Elf32_Off e_phoff;<br>Elf32_Off e_shoff;<br>Elf32_Word e_flags;<br>Elf32_Half e_ehsize;<br>Elf32_Half e_phentsize;<br>Elf32_Half e_phnum;<br>Elf32_Half e_shentsize;<br>Elf32_Half e_shnum;<br>Elf32_Half e_shstrndx; <br>&#125;Elf32_Ehdr;<br></code></pre></td></tr></table></figure>
 
 <h3 id="e-ident"><a href="#e-ident" class="headerlink" title="e_ident"></a>e_ident</h3><p>0<del>3 EI_MAG0</del>3 是文件表示  魔数 .ELF</p>
@@ -349,7 +352,7 @@
 <p>e_shentsize 节区头部表项大小(不包括第一个NULL节区)</p>
 <p>e_shnum 节区头部表项数量</p>
 <p>e_shstrndx 节区头部表中与节区名称字符串表相关的表项的索引 (指明存储节区名字符串的节区的索引)</p>
-<h2 id="节区-Sections"><a href="#节区-Sections" class="headerlink" title="节区(Sections)"></a>节区(Sections)</h2><p>节区中包含目标文件中的所有信息，除了：ELF头部、程序头部表格、节区头部表格。节区满足以下条件：</p>
+<h1 id="节区-Sections"><a href="#节区-Sections" class="headerlink" title="节区(Sections)"></a>节区(Sections)</h1><p>节区中包含目标文件中的所有信息，除了：ELF头部、程序头部表格、节区头部表格。节区满足以下条件：</p>
 <p> (1). 目标文件中的每个节区都有对应的节区头部描述它，反过来，有节区头部不意 味着有节区。 </p>
 <p>(2). 每个节区占用文件中一个连续字节区域（这个区域可能长度为 0）。 </p>
 <p>(3). 文件中的节区不能重叠，不允许一个字节存在于两个节区中的情况发生。</p>
@@ -388,18 +391,52 @@
 <h2 id="字符串表"><a href="#字符串表" class="headerlink" title="字符串表"></a>字符串表</h2><p>字符串表也属于节区 包含以NULL结尾的字符串</p>
 <p>开头和末尾一字节均为0</p>
 <h2 id="符号表"><a href="#符号表" class="headerlink" title="符号表"></a>符号表</h2><p>符号表中包含用来定位、重定位程序中符号定义和引用的信息</p>
+<p>ELF中有多种符号表</p>
+<p>**SHT_SYMTAB (静态符号表)**：</p>
+<ul>
+<li><strong>用途</strong>：用于在链接过程中，为链接器提供符号信息。</li>
+<li><strong>特点</strong>：包含所有符号，包括本地和全局符号。</li>
+<li><strong>典型使用场景</strong>：编译和静态链接阶段。</li>
+</ul>
+<p>**SHT_DYNSYM (动态符号表)**：</p>
+<ul>
+<li><strong>用途</strong>：用于运行时动态链接，为动态链接器提供符号信息。</li>
+<li><strong>特点</strong>：只包含导出和导入的全局符号，通常比静态符号表小。</li>
+<li><strong>典型使用场景</strong>：动态链接库（DLL&#x2F;so 文件）和动态链接的可执行文件。</li>
+</ul>
+<p>**SHT_SYMTAB_SHNDX (扩展符号表节区索引)**：</p>
+<ul>
+<li><strong>用途</strong>：扩展符号表节区的索引范围。</li>
+<li><strong>特点</strong>：用于处理超出基本 ELF 格式限制的大型符号表。</li>
+<li><strong>典型使用场景</strong>：需要大符号表索引范围的复杂应用。</li>
+</ul>
 <p>表项结构如下</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> &#123;</span><br>Elf32_Word st_name; <br>Elf32_Addr st_value;<br>Elf32_Word st_size; <br><span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> st_info; <br><span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> st_other; <br>Elf32_Half st_shndx;<br> &#125; Elf32_sym; <br></code></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> &#123;</span><br>    Elf32_Word st_name;<br>    Elf32_Addr st_value;<br>    Elf32_Word st_size;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> st_info;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> st_other;<br>    Elf32_Half st_shndx;<br>&#125; Elf32_Sym;<br></code></pre></td></tr></table></figure>
 
 <ul>
-<li>st_name 包含目标文件符号字符串表的索引  （如何查找符号字符串表）</li>
-<li>st_value  符号的值，表示符号在文件中的地址或者偏移量。对于变量，通常是它在内存中的地址；对于函数，通常是它在文件中的偏移量。</li>
-<li>st_size 符号相关的尺寸大小</li>
-<li>st_info 符号的类型和绑定属性</li>
-<li>st_other 0 无定义</li>
-<li>st_shndx 给出相关的节区头部表索引</li>
+<li>st_name 包含目标文件符号字符串表的索引，若为0，则符号没有地址</li>
+<li>st_value 符号值</li>
 </ul>
-<h3 id="关于-st-info-的说明"><a href="#关于-st-info-的说明" class="headerlink" title="关于 st_info 的说明"></a>关于 st_info 的说明</h3><h2 id="重定位表"><a href="#重定位表" class="headerlink" title="重定位表"></a>重定位表</h2><p>表项结构如下</p>
+<p>对于函数符号  是函数的起始地址，对于全局变量，是变量地址，对于未定义符号是0</p>
+<p>st_size 符号相关的尺寸大小  对于函数是代码长度，对于变量，是变量的宽度</p>
+<h3 id="st-info"><a href="#st-info" class="headerlink" title="st_info"></a>st_info</h3><p>st_info 符号的类型和绑定属性</p>
+<p>高四位表示符号绑定，低四位表示符号类型</p>
+<p><img src="/2024/05/06/ELF/ELF/image-20240712105238277.png" srcset="/img/loading.gif" lazyload alt="image-20240712105238277"></p>
+<p>如果一个弱符号有同名的全局符号，则会被覆盖，否则将被使用，相当于给一个默认符号</p>
+<p><img src="/2024/05/06/ELF/ELF/image-20240712105341236.png" srcset="/img/loading.gif" lazyload alt="image-20240712105341236"></p>
+<p><img src="/2024/05/06/ELF/ELF/image-20240712105352001.png" srcset="/img/loading.gif" lazyload alt="image-20240712105352001"></p>
+<p><strong>STT_NOTYPE (0)</strong>: 未指定类型（No type specified）。</p>
+<p><strong>STT_OBJECT (1)</strong>: 数据对象（Data object），通常表示变量、数组等。</p>
+<p><strong>STT_FUNC (2)</strong>: 函数（Function），表示函数或方法。</p>
+<p><strong>STT_SECTION (3)</strong>: 节区（Section），表示 ELF 文件中的一个节区。</p>
+<p><strong>STT_FILE (4)</strong>: 文件（File），表示源文件。</p>
+<p><strong>STT_COMMON (5)</strong>: 公共块（Common block），表示一个未初始化的全局变量。</p>
+<p><strong>STT_TLS (6)</strong>: 线程局部存储（Thread Local Storage），表示用于线程局部存储的数据对象。</p>
+<p><strong>STT_NUM (7)</strong>: 符号类型的数量（Number of defined types）。</p>
+<p>st_other 0 无定义</p>
+<p>st_shndx 给出相关的节区头部表索引</p>
+<p>根据节区的sh_link寻找对应的字符串节</p>
+<h2 id="重定位表"><a href="#重定位表" class="headerlink" title="重定位表"></a>重定位表</h2><p>表项结构如下</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">struct</span> &#123;<br>Elf32_Addr r_offset;<br>Elf32_Word r_info;<br>&#125; Elf32_Rel;<br><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">struct</span> &#123;<br>Elf32_Addr r_offset;<br>Elf32_Word r_info;<br>Elf32_Word r_addend;<br>&#125; Elf32_Rela; <br></code></pre></td></tr></table></figure>
 
 <ul>
@@ -410,7 +447,7 @@
 <p>重定位节区会引用两个其它节区：符号表、要修改的节区。节区头部的 sh_info 和 sh_link 成员给出这些关系。不同目标文件的重定位表项对 r_offset 成员具有略微不同的解释。</p>
 <p>(1). 在可重定位文件中，r_offset 中包含节区偏移。就是说重定位节区自身 描述了如何修改文件中的其他节区；重定位偏移 指定了被修改节区中的 一个存储单元。  </p>
 <p>(2). 在可执行文件和共享的目标文件中，r_offset 中包含一个虚拟地址。为 了使得这些文件的重定位表项对动态链接器更为有用，节区偏移（针对文 件的解释）让位于虚地址（针对内存的解释）。 </p>
-<h2 id="程序头部-Program-Header"><a href="#程序头部-Program-Header" class="headerlink" title="程序头部(Program Header)"></a>程序头部(Program Header)</h2><p>可执行文件或者共享目标文件的程序头部是一个结构数组，每个结构描述了一个段 或者系统准备程序执行所必需的其它信息。目标文件的“段”包含一个或者多个“节区”， 也就是“段内容（Segment Contents）”。程序头部仅对于可执行文件和共享目标文件有意义。</p>
+<h1 id="程序头部-Program-Header"><a href="#程序头部-Program-Header" class="headerlink" title="程序头部(Program Header)"></a>程序头部(Program Header)</h1><p>可执行文件或者共享目标文件的程序头部是一个结构数组，每个结构描述了一个段 或者系统准备程序执行所必需的其它信息。目标文件的“段”包含一个或者多个“节区”， 也就是“段内容（Segment Contents）”。程序头部仅对于可执行文件和共享目标文件有意义。</p>
 <p>指明了段的信息,不是所有段都由文件中的内容所映射，例如.bss</p>
 <p>依照ELF头部的e_phentsize e_phnum 字段可确定程序头部表大小</p>
 <p>程序头部表项结构如下</p>
