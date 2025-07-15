@@ -1,0 +1,773 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN,en,default" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/head.jpg">
+  <link rel="icon" href="/img/head.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Dexter Morgan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="afl-fuzz 使用使用参数 12345678.&#x2F;afl-fuzz  -i 输入目录 -o 输出目录  目标程序 @@-i dir 指定输入种子目录-o dir 输出目录-Q 使用qemu模式-m limit 内存限制(单位MB)-t 限时(单位毫秒)@@ 占位符  输出目录crashes&#x2F; 触发程序崩溃的测试用例 例如 123456id:000000,sig:11,src:00000">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AFL++分析">
+<meta property="og:url" content="https://dextermorgan0417.github.io/2025/04/07/AFL++/index.html">
+<meta property="og:site_name" content="Dexter">
+<meta property="og:description" content="afl-fuzz 使用使用参数 12345678.&#x2F;afl-fuzz  -i 输入目录 -o 输出目录  目标程序 @@-i dir 指定输入种子目录-o dir 输出目录-Q 使用qemu模式-m limit 内存限制(单位MB)-t 限时(单位毫秒)@@ 占位符  输出目录crashes&#x2F; 触发程序崩溃的测试用例 例如 123456id:000000,sig:11,src:00000">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2025/04/07/AFL++/image-20250428125655556.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2025/04/07/AFL++/image-20250424164450610.png">
+<meta property="article:published_time" content="2025-04-07T08:22:27.000Z">
+<meta property="article:modified_time" content="2025-07-05T15:14:17.886Z">
+<meta property="article:author" content="Dexter Morgan">
+<meta property="article:tag" content="FUZZ">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dextermorgan0417.github.io/2025/04/07/AFL++/image-20250428125655556.png">
+  
+  
+  
+  <title>AFL++分析 - Dexter</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"dextermorgan0417.github.io","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"left","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":1},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 50vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Dexter</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/gamersky_01origin_01_20168131952B9E.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="AFL++分析"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-04-07 16:22" pubdate>
+          2025年4月7日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          11 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="padding-left: 2rem; margin-right: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">AFL++分析</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="afl-fuzz-使用"><a href="#afl-fuzz-使用" class="headerlink" title="afl-fuzz 使用"></a>afl-fuzz 使用</h1><p>使用参数</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs shell">./afl-fuzz  -i 输入目录 -o 输出目录  目标程序 @@<br><br>-i dir 指定输入种子目录<br>-o dir 输出目录<br>-Q 使用qemu模式<br>-m limit 内存限制(单位MB)<br>-t 限时(单位毫秒)<br>@@ 占位符<br></code></pre></td></tr></table></figure>
+
+<h2 id="输出目录"><a href="#输出目录" class="headerlink" title="输出目录"></a>输出目录</h2><p>crashes&#x2F; 触发程序崩溃的测试用例</p>
+<p>例如</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">id</span>:<span class="hljs-number">000000</span>,sig:<span class="hljs-number">11</span>,src:<span class="hljs-number">000000</span>,time:<span class="hljs-number">33</span>,execs:<span class="hljs-number">33</span>,op:havoc,rep:<span class="hljs-number">2</span><br><span class="hljs-attribute">id</span> <br><span class="hljs-attribute">sig</span> 触发的信号类型 <span class="hljs-number">11</span>(段错误)<br><span class="hljs-attribute">src</span> 来源<br><span class="hljs-attribute">op</span> 操作<br><span class="hljs-attribute">rep</span> 重复次数<br></code></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs cpp">hangs/ 导致程序超时的测试用例<br><br>queue/ 所有有效的测试用例队列<br><br>fuzzer_stats 统计的信息<br><br>cmdline 启动的命令<br><br>target_hash 目标程序哈希<br><br>fuzz_bitmap 覆盖率位图<br><br>fastresume.bin 快速回复状态<br><br>fuzzer_setup 初始配置信息<br></code></pre></td></tr></table></figure>
+
+<h1 id="输出显示"><a href="#输出显示" class="headerlink" title="输出显示"></a>输出显示</h1><p><img src="/2025/04/07/AFL++/image-20250428125655556.png" srcset="/img/loading.gif" lazyload alt="image-20250428125655556"></p>
+<h2 id="process-timing-进程计时"><a href="#process-timing-进程计时" class="headerlink" title="process timing 进程计时"></a>process timing 进程计时</h2><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs applescript"><span class="hljs-built_in">run</span> <span class="hljs-built_in">time</span> 运行的时间<br><span class="hljs-keyword">last</span> new find: 上次发现新路径的时间<br><span class="hljs-keyword">last</span> saved crash/hang: 上次保存的崩溃/挂起<br></code></pre></td></tr></table></figure>
+
+<h2 id="overall-result-结果"><a href="#overall-result-结果" class="headerlink" title="overall result 结果"></a>overall result 结果</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash">cycles <span class="hljs-keyword">done</span> 完成主循环次数<br>corpus count: 当前语料库中的测试用例数量<br>saved crashes/hangs: 已保存的崩溃/挂起数量<br></code></pre></td></tr></table></figure>
+
+<h2 id="Cycle-Process-循环进度"><a href="#Cycle-Process-循环进度" class="headerlink" title="Cycle Process 循环进度"></a>Cycle Process 循环进度</h2><figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-attribute">now processing</span><span class="hljs-punctuation">:</span> <span class="hljs-string">当前正在处理的测试用例</span><br><span class="hljs-attribute">runs timed out</span><span class="hljs-punctuation">:</span> <span class="hljs-string">超时的运行次数</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Stage-Progress（阶段进度）"><a href="#Stage-Progress（阶段进度）" class="headerlink" title="Stage Progress（阶段进度）"></a>Stage Progress（阶段进度）</h2><figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-attribute">now trying</span><span class="hljs-punctuation">:</span> <span class="hljs-string">当前执行的变异策略</span><br><span class="hljs-attribute">stage execs</span><span class="hljs-punctuation">:</span> <span class="hljs-string">当前阶段的执行次数</span><br><span class="hljs-attribute">total execs</span><span class="hljs-punctuation">:</span> <span class="hljs-string">总执行次数</span><br><span class="hljs-attribute">exec speed</span><span class="hljs-punctuation">:</span> <span class="hljs-string">执行速度</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Findings-in-Depth（发现深度）"><a href="#Findings-in-Depth（发现深度）" class="headerlink" title="Findings in Depth（发现深度）"></a>Findings in Depth（发现深度）</h2><figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">favored <span class="hljs-keyword">items</span>: 被标记为“优选”的测试用例<br><span class="hljs-built_in">new</span> edges <span class="hljs-keyword">on</span>: 新发现的路径<br>total crashes: 总崩溃次数<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="afl-showmap"><a href="#afl-showmap" class="headerlink" title="afl-showmap"></a>afl-showmap</h1><figure class="highlight vhdl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vhdl">afl-showmap -o <span class="hljs-keyword">map</span>.<span class="hljs-keyword">out</span> <span class="hljs-comment">-- ./target @@</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="插件"><a href="#插件" class="headerlink" title="插件"></a>插件</h1><ul>
+<li><code>afl_custom_init()</code> &#x2F; <code>afl_custom_deinit()</code>：初始化和清理函数。</li>
+<li><code>afl_custom_fuzz()</code>：执行自定义变异。</li>
+<li><code>afl_custom_post_process()</code>：对变异后的输入进行后处理。</li>
+<li><code>afl_custom_queue_get()</code>：决定是否对当前队列项进行变异。</li>
+<li><code>afl_custom_queue_new_entry()</code>：新队列项添加后的回调函数。</li>
+<li><code>afl_custom_describe()</code>：提供变异器的描述信息。</li>
+</ul>
+<h2 id="结构感知变异器"><a href="#结构感知变异器" class="headerlink" title="结构感知变异器"></a>结构感知变异器</h2><h2 id="语法驱动的输入生成器"><a href="#语法驱动的输入生成器" class="headerlink" title="语法驱动的输入生成器"></a>语法驱动的输入生成器</h2><p><img src="/2025/04/07/AFL++/image-20250424164450610.png" srcset="/img/loading.gif" lazyload alt="image-20250424164450610"></p>
+<h2 id="与符号执行工具集成"><a href="#与符号执行工具集成" class="headerlink" title="与符号执行工具集成"></a>与符号执行工具集成</h2><h1 id="结果分析"><a href="#结果分析" class="headerlink" title="结果分析"></a>结果分析</h1><p>模糊测试中,若出现crash ,afl++会把导致crash的输入保存到输出目标的crashes&#x2F;目录中</p>
+<p>输入文件命名通常如下</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">id</span>:<span class="hljs-number">000002</span>,sig:<span class="hljs-number">11</span>,src:<span class="hljs-number">000000</span>,op:havoc,rep:<span class="hljs-number">32</span><br><span class="hljs-attribute">id</span> 唯一编号<br><span class="hljs-attribute">sig</span> 主进程接受到目标进程的信号<br><span class="hljs-attribute">src</span> 种子编号<br><span class="hljs-attribute">op</span> 变异策略<br><span class="hljs-attribute">rep</span> 重复次数<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><h2 id="alf-fuzz"><a href="#alf-fuzz" class="headerlink" title="alf-fuzz"></a>alf-fuzz</h2><p>afl++过程</p>
+<figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs asciidoc"><span class="hljs-code">     [main()]</span><br><span class="hljs-code">         ↓</span><br>读取命令行和环境变量<br><span class="hljs-code">         ↓</span><br>初始化全局状态结构 afl<span class="hljs-emphasis">_state_t</span><br><span class="hljs-emphasis">         ↓</span><br><span class="hljs-emphasis">设置信号处理器（setup_signal_handlers）</span><br><span class="hljs-emphasis">         ↓</span><br><span class="hljs-emphasis">初始化共享内存，设置 fork server</span><br><span class="hljs-emphasis">         ↓</span><br><span class="hljs-emphasis">构建目标程序执行参数（argv）</span><br><span class="hljs-emphasis">         ↓</span><br><span class="hljs-emphasis">加载初始种子 testcase 并生成初始队列</span><br><span class="hljs-emphasis">         ↓</span><br><span class="hljs-emphasis">========== 主循环 ==========  (fuzz_one 或类似函数)</span><br><span class="hljs-emphasis">while (!stop_</span>soon) &#123;<br><span class="hljs-code">    - 从队列选择一个 testcase</span><br><span class="hljs-code">    - 进行变异（bitflip、arith、havoc等）</span><br><span class="hljs-code">    - 运行目标程序（通过 fork server 或 QEMU 等）</span><br><span class="hljs-code">    - 检查 coverage bitmap 是否有新变化</span><br><span class="hljs-code">    - 若发现崩溃或挂起，保存到 crashes/hangs</span><br><span class="hljs-code">    - 若覆盖率提高，加入到 queue 中</span><br><span class="hljs-section">&#125;</span><br><span class="hljs-section">==============================</span><br><span class="hljs-code">         ↓</span><br>清理子进程，释放共享内存<br><br></code></pre></td></tr></table></figure>
+
+
+
+<h2 id="setup-signal-handlers"><a href="#setup-signal-handlers" class="headerlink" title="setup_signal_handlers"></a>setup_signal_handlers</h2><p>注册相对应的信号处理函数,例如安全响应ctrl+c</p>
+<h2 id="边覆盖机制"><a href="#边覆盖机制" class="headerlink" title="边覆盖机制"></a>边覆盖机制</h2><figure class="highlight ceylon"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs ceylon">cur<span class="hljs-number">_</span>loc = random<span class="hljs-number">_</span>id;         <span class="hljs-comment">// 每个插桩点有唯一的 ID</span><br><span class="hljs-keyword">shared</span><span class="hljs-number">_m</span>em[cur<span class="hljs-number">_</span>loc ^ prev<span class="hljs-number">_</span>loc]++;  <span class="hljs-comment">// XOR 上一个点，更新 bitmap</span><br>prev<span class="hljs-number">_</span>loc = cur<span class="hljs-number">_</span>loc &gt;&gt; <span class="hljs-number">1</span>;     <span class="hljs-comment">// 作为下次的 prev_loc</span><br></code></pre></td></tr></table></figure>
+
+<p>通过当前块和上一个块进行异或</p>
+<p>共享内存中维护一个BitMap</p>
+<h2 id="fork-server"><a href="#fork-server" class="headerlink" title="fork-server"></a>fork-server</h2><p>fork server 是afl++ 优化性能的机制，afl++ 启动目标程序后在初始化完成后等待，</p>
+<p>相关代码在src&#x2F;afl-forkserver.c文件中</p>
+<p> 核心是afl_fsrv_start函数，函数负责常见控制管道，与afl++主进程通信，创建子进程并执行目标程序</p>
+<p>fork子进程之后使用init_child_func 启动子进程，这是一个函数指针</p>
+<h2 id="queue"><a href="#queue" class="headerlink" title="queue"></a>queue</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">queue_entry</span> &#123;</span><br><br>  u8 *fname;  <span class="hljs-comment">//文件路径                         </span><br>  u32 len;    <span class="hljs-comment">//文件长度                          </span><br>  u32 id;     <span class="hljs-comment">//编号                        </span><br><br>  u8 colorized,                        <br>      cal_failed;                     <br><br>  <span class="hljs-type">bool</span> trim_done,                      <br>      was_fuzzed,                     <br>      passed_det,                      <br>      has_new_cov,                     <br>      var_behavior,                    <br>      favored,                         <br>      fs_redundant,                     <br>      is_ascii,                       <br>      disabled;                        <br><br>  u32 bitmap_size,                    <br><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> INTROSPECTION</span><br>      stats_selected,                   <br>      stats_skipped,                    <br>      stats_finds,                     <br>      stats_crashes,                   <br>      stats_tmouts,                    <br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br>      fuzz_level,                      <br>      n_fuzz_entry;                     <br><br>  u64 exec_us,                         <br>      handicap,                        <br>      depth,                            <br>      exec_cksum,                      <br>      custom,                           <br>      stats_mutated;                    <br>  u32 tc_ref;                           <br><br><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> INTROSPECTION</span><br>  u32 bitsmap_size;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br><br>  <span class="hljs-type">double</span> perf_score,                    <span class="hljs-comment">/* performance score                */</span><br>      weight;<br><br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">queue_entry</span> *<span class="hljs-title">mother</span>;</span>            <span class="hljs-comment">/* queue entry this based on        */</span><br>  u8                 *trace_mini;        <span class="hljs-comment">/* Trace bytes, if kept             */</span><br>  u8                 *testcase_buf;      <span class="hljs-comment">/* The testcase buffer, if loaded.  */</span><br>  u8                 *cmplog_colorinput; <span class="hljs-comment">/* the result buf of colorization   */</span><br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">tainted</span>     *<span class="hljs-title">taint</span>;</span>             <span class="hljs-comment">/* Taint information from CmpLog    */</span><br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">skipdet_entry</span> *<span class="hljs-title">skipdet_e</span>;</span><br><br>&#125;;<br></code></pre></td></tr></table></figure>
+
+
+
+<h2 id="插桩"><a href="#插桩" class="headerlink" title="插桩"></a>插桩</h2><p>qemu_mode&#x2F;qemuafl&#x2F;accel&#x2F;tcg&#x2F;translate-all.c   afl_gen_trace</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">afl_gen_trace</span><span class="hljs-params">(target_ulong cur_loc)</span> &#123;<br><br>  <span class="hljs-comment">/* Optimize for cur_loc &gt; afl_end_code, which is the most likely case on</span><br><span class="hljs-comment">     Linux systems. */</span><br><br>  cur_block_is_good = afl_must_instrument(cur_loc);<br><br>  <span class="hljs-keyword">if</span> (!cur_block_is_good)<br>    <span class="hljs-keyword">return</span>;<br><br>  <span class="hljs-comment">/* Looks like QEMU always maps to fixed locations, so ASLR is not a</span><br><span class="hljs-comment">     concern. Phew. But instruction addresses may be aligned. Let&#x27;s mangle</span><br><span class="hljs-comment">     the value to get something quasi-uniform. */</span><br><br>  <span class="hljs-comment">// cur_loc = (cur_loc &gt;&gt; 4) ^ (cur_loc &lt;&lt; 8);</span><br>  <span class="hljs-comment">// cur_loc &amp;= MAP_SIZE - 1;</span><br>  cur_loc = (<span class="hljs-type">uintptr_t</span>)(afl_hash_ip((<span class="hljs-type">uint64_t</span>)cur_loc));<br>  cur_loc &amp;= (MAP_SIZE - <span class="hljs-number">1</span>);<br><br>  <span class="hljs-comment">/* Implement probabilistic instrumentation by looking at scrambled block</span><br><span class="hljs-comment">     address. This keeps the instrumented locations stable across runs. */</span><br><br>  <span class="hljs-keyword">if</span> (cur_loc &gt;= afl_inst_rms) <span class="hljs-keyword">return</span>;<br><br>  TCGv cur_loc_v = tcg_const_tl(cur_loc);<br>  <span class="hljs-keyword">if</span> (unlikely(afl_track_unstable_log_fd() &gt;= <span class="hljs-number">0</span>)) &#123;<br>    gen_helper_afl_maybe_log_trace(cur_loc_v);<br>  &#125; <span class="hljs-keyword">else</span> &#123;<br>    gen_helper_afl_maybe_log(cur_loc_v);<br>  &#125;<br>  tcg_temp_free(cur_loc_v);<br><br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h2 id="qemu插件"><a href="#qemu插件" class="headerlink" title="qemu插件"></a>qemu插件</h2><p><strong>翻译块（Translation Block，TB）</strong> 是动态二进制翻译的基本单位。当 QEMU 首次遇到一段目标代码时，会将其翻译为主机代码，直到遇到跳转指令或无法在翻译时确定的虚拟 CPU 状态更改为止。这段连续的指令序列被称为一个翻译块。通过将代码划分为翻译块，QEMU 能够高效地缓存和重用已翻译的代码，提高仿真性能</p>
+<p>插件初始化函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">QEMU_PLUGIN_EXPORT <span class="hljs-type">int</span> <span class="hljs-title function_">qemu_plugin_install</span><span class="hljs-params">(<span class="hljs-type">qemu_plugin_id_t</span> id, <span class="hljs-type">const</span> <span class="hljs-type">qemu_info_t</span> *info, <span class="hljs-type">int</span> argc, <span class="hljs-type">char</span> **argv)</span>;<br>-id 插件标识<br>-info 信息结构体<br>-argc argv 插件参数(同main)<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">qemu_plugin_register_vcpu_tb_trans_cb</span><span class="hljs-params">(<span class="hljs-type">qemu_plugin_id_t</span> id, <span class="hljs-type">qemu_plugin_tb_trans_cb_t</span> cb)</span>;<br>-id 插件标识<br>-cd 回调函数<br></code></pre></td></tr></table></figure>
+
+<p>注册一个回调函数,当每个翻译块被翻译时，QEMU 会调用这个回调函数</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ebnf"><span class="hljs-attribute">qemu_plugin_insn_vaddr</span><br></code></pre></td></tr></table></figure>
+
+<p>翻译阶段获取指令虚拟地址</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ebnf"><span class="hljs-attribute">insn_exec_cb</span><br></code></pre></td></tr></table></figure>
+
+<p>执行阶段获取指令虚拟地址</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/FUZZ/" class="category-chain-item">FUZZ</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/FUZZ/" class="print-no-link">#FUZZ</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>AFL++分析</div>
+      <div>https://dextermorgan0417.github.io/2025/04/07/AFL++/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Dexter Morgan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年4月7日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar category-bar" style="margin-left: -1rem">
+    
+
+
+
+
+
+<div class="category-list">
+  
+  
+    
+    
+    
+    <div class="category row nomargin-x">
+      <a class="category-item 
+          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="FUZZ"
+        id="heading-f432409f8745e1df9d425828834095be" role="tab" data-toggle="collapse" href="#collapse-f432409f8745e1df9d425828834095be"
+        aria-expanded="true"
+      >
+        FUZZ
+        <span class="list-group-count">(2)</span>
+        <i class="iconfont icon-arrowright"></i>
+      </a>
+      
+      <div class="category-collapse collapse show" id="collapse-f432409f8745e1df9d425828834095be"
+           role="tabpanel" aria-labelledby="heading-f432409f8745e1df9d425828834095be">
+        
+        
+          
+  <div class="category-post-list">
+    
+    
+      
+      
+        <a href="/2025/04/07/AFL++/" title="AFL++分析"
+           class="list-group-item list-group-item-action
+           active">
+          <span class="category-post">AFL++分析</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2025/05/29/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/aflgo-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/" title="aflgo-论文阅读"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">aflgo-论文阅读</span>
+        </a>
+      
+    
+  </div>
+
+        
+      </div>
+    </div>
+  
+</div>
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <span>Dexter</span></a> <span>Morgan</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

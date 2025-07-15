@@ -1,0 +1,835 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN,en,default" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/head.jpg">
+  <link rel="icon" href="/img/head.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Dexter Morgan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="概述本章介绍UNIX的进程控制，包括创建新进程、执行程序和进程终止。还将说明进程的各 种I D—实际、有效和保存的用户和组I D，以及它们如何受到进程控制原语的影响。本章也包 括了解释器文件和system函数。本章以大多数UNIX系统所提供的进程会计机制结束。这使我 们从一个不同角度了解进程控制功能。 进程ID进程ID (pid)是进程的唯一标识 123456pid_t getpid(void);">
+<meta property="og:type" content="article">
+<meta property="og:title" content="进程控制">
+<meta property="og:url" content="https://dextermorgan0417.github.io/2024/05/28/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/index.html">
+<meta property="og:site_name" content="Dexter">
+<meta property="og:description" content="概述本章介绍UNIX的进程控制，包括创建新进程、执行程序和进程终止。还将说明进程的各 种I D—实际、有效和保存的用户和组I D，以及它们如何受到进程控制原语的影响。本章也包 括了解释器文件和system函数。本章以大多数UNIX系统所提供的进程会计机制结束。这使我 们从一个不同角度了解进程控制功能。 进程ID进程ID (pid)是进程的唯一标识 123456pid_t getpid(void);">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/28/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/image-20240528222711387.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/28/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/image-20240528230027942.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/28/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/image-20240528230558060.png">
+<meta property="article:published_time" content="2024-05-28T08:50:58.000Z">
+<meta property="article:modified_time" content="2024-06-28T05:09:16.267Z">
+<meta property="article:author" content="Dexter Morgan">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dextermorgan0417.github.io/2024/05/28/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/image-20240528222711387.png">
+  
+  
+  
+  <title>进程控制 - Dexter</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"dextermorgan0417.github.io","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"left","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":1},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 50vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Dexter</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/gamersky_01origin_01_20168131952B9E.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="进程控制"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-05-28 16:50" pubdate>
+          2024年5月28日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          18 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="padding-left: 2rem; margin-right: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">进程控制</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>本章介绍UNIX的进程控制，包括创建新进程、执行程序和进程终止。还将说明进程的各 种I D—实际、有效和保存的用户和组I D，以及它们如何受到进程控制原语的影响。本章也包 括了解释器文件和system函数。本章以大多数UNIX系统所提供的进程会计机制结束。这使我 们从一个不同角度了解进程控制功能。</p>
+<h1 id="进程ID"><a href="#进程ID" class="headerlink" title="进程ID"></a>进程ID</h1><p>进程ID (pid)是进程的唯一标识</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">pid_t</span> <span class="hljs-title function_">getpid</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>; <span class="hljs-comment">//返回：调用进程的进程I D</span><br><span class="hljs-type">pid_t</span> <span class="hljs-title function_">getppid</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>; <span class="hljs-comment">//返回：调用进程的父进程 I D</span><br><span class="hljs-type">uid_t</span> <span class="hljs-title function_">getuid</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>; <span class="hljs-comment">//返回：调用进程的实际用户 I D</span><br><span class="hljs-type">uid_t</span> <span class="hljs-title function_">geteuid</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>; <span class="hljs-comment">//返回：调用进程的有效用户 I D</span><br><span class="hljs-type">gid_t</span> <span class="hljs-title function_">getgid</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>; <span class="hljs-comment">//返回：调用进程的实际组 I D</span><br><span class="hljs-type">gid_t</span> <span class="hljs-title function_">getegid</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>; <span class="hljs-comment">//返回：调用进程的有效组 I D</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="fork函数"><a href="#fork函数" class="headerlink" title="fork函数"></a>fork函数</h1><p>fork函数是UNIX内核创建新进程的唯一方法</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">pid_t</span> <span class="hljs-title function_">fork</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;<span class="hljs-comment">//返回：子进程中为0，父进程中为子进程I D，出错为-1</span><br></code></pre></td></tr></table></figure>
+
+<p>一个进程可以有多个子进程，但是有且只有一个父进程</p>
+<p>子进程总是可以调用getppid以获得其父进程的进程ID</p>
+<p>fork的一个特性是所有由父进程打开的描述符都被复制到子进程中。父、 子进程每个相同的打开描述符共享一个文件表项 （stdin stdout stderr 相同）</p>
+<p><img src="/2024/05/28/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/image-20240528222711387.png" srcset="/img/loading.gif" lazyload alt="image-20240528222711387"></p>
+<p>很多父进程的其他性质也由子进程继承：</p>
+<p>• 实际用户I D、</p>
+<p>实际组I D、</p>
+<p>有效用户I D、</p>
+<p>有效组I D。</p>
+<p> • 添加组I D。</p>
+<p> • 进程组I D。 </p>
+<p>• 对话期I D。 </p>
+<p>• 控制终端。 •</p>
+<p> 设置-用户- I D标志和设置-组- I D标志。 </p>
+<p>• 当前工作目录。</p>
+<p>• 根目录。</p>
+<p> • 文件方式创建屏蔽字。</p>
+<p> • 信号屏蔽和排列。 </p>
+<p>• 对任一打开文件描述符的在执行时关闭标志。 </p>
+<p>• 环境。</p>
+<p> • 连接的共享存储段。 </p>
+<p>• 资源限制。</p>
+<p>父、子进程之间的区别是：</p>
+<p>• fork的返回值。</p>
+<p> • 进程I D。 </p>
+<p>• 不同的父进程I D。 </p>
+<p>• 子进程的t m s _ u t i m e , t m s _ s t i m e , t m s _ c u t i m e以及t m s _ u s t i m e设置为0。 • 父进程设置的锁，子进程不继承。 </p>
+<p>• 子进程的未决告警被清除。 </p>
+<p>• 子进程的未决信号集设置为空集。</p>
+<p>f o r k有两种用法： </p>
+<p>(1) 一个父进程希望复制自己，使父、子进程同时执行不同的代码段。这在网络服务进程 中是常见的——父进程等待委托者的服务请求。当这种请求到达时，父进程调用 f o r k，使子进 程处理此请求。父进程则继续等待下一个服务请求。 （多进程并发）</p>
+<p>(2) 一个进程要执行一个不同的程序。这对 s h e l l是常见的情况。在这种情况下，子进程在 从f o r k返回后立即调用e x e c (我们将在8 . 9节说明e x e c )。</p>
+<h1 id="vfork函数"><a href="#vfork函数" class="headerlink" title="vfork函数"></a>vfork函数</h1><p>vfork用于创建一个新进程，而该新进程的目的是exec一个新程序</p>
+<p>vfork与fork一样都创建一个子进程， 但是它并不将父进程的地址空间完全复制到子进程中，因为子进程会立即调用exec (或exit) 不过在子进程调用 e x e c或e x i t之前，它在父进程的空间中运行。也就是可能会改变父进程空间的内容</p>
+<p>vfork和fork之间的另一个区别是：vfork保证子进程先运行，在它调用exec或exit之后父进 程才可能被调度运行（如果在调用这两个函数之前子进程依赖于父进程的进一步动作，则会导致死锁。）</p>
+<h1 id="exit函数"><a href="#exit函数" class="headerlink" title="exit函数"></a>exit函数</h1><p>进程有三种正常终止法及两种异常终止法：</p>
+<p>(1) 正常终止：</p>
+<p>(a) 在main函数内执行return语句。如在7.3节中所述，这等效于调用exit。</p>
+<p>(b) 调用exit函数。此函数由ANSI C定义，其操作包括调用各终止处理程序（终止处理程序在调用atexit函数时注册），然后关闭所有标准I&#x2F;O流等。因为ANSI C并不处理文件描述符、多进程（父、子进程）以及作业控制，所以这一定义对UNIX系统而言是不完整的。</p>
+<p>(c) 调用_exit系统调用函数。此函数由exit调用，它处理UNIX特定的细节。_exit是由POSIX.1规定的。</p>
+<p>(2) 异常终止：</p>
+<p>(a) 调用abort。它产生SIGABRT信号，所以是下一种异常终止的一种特例。</p>
+<p>(b) 当进程接收到某个信号时（第10章将较详细地说明信号）。进程本身（例如调用abort函数）、其他进程和内核都能产生传送到某一进程的信号。例如，进程越出其地址空间访问存储单元，或者除以0，内核就会为该进程产生相应的信号。</p>
+<p>对于父进程终止的进程，父进程会变为init进程，我们称这些进程由init进程领养</p>
+<p>对于子进程终止时，内核为子进程保留一定信息以供父进程使用wait | waitpid 获取相关信息</p>
+<p>但是对于父进程是init的进程，终止时init会使用wait，以防止内核保存信息</p>
+<h1 id="wait和waitpid函数"><a href="#wait和waitpid函数" class="headerlink" title="wait和waitpid函数"></a>wait和waitpid函数</h1><p>当一个进程正常或异常终止时，内核就向其父进程发送SIGCHLD信号。因为子进程终止 是个异步事件(这可以在父进程运行的任何时候发生 )，所以这种信号也是内核向父进程发的异 步通知。父进程可以忽略该信号，或者提供一个该信号发生时即被调用执行的函数 (信号处理 程序)。对于这种信号的系统默认动作是忽略它。</p>
+<p>调用wait或waitpid的进程可能会：</p>
+<p>• 阻塞(如果其所有子进程都还在运行)。 </p>
+<p>• 带子进程的终止状态立即返回(如果一个子进程已终止，正等待父进程存取其终止状态 )。 </p>
+<p>• 出错立即返回(如果它没有任何子进程)。</p>
+<p>如果进程由于接收到SIGCHLD信号而调用wait，则可期望wait会立即返回。但是如果在一 个任一时刻调用wait，则进程可能会阻塞。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">pid_t</span> <span class="hljs-title function_">wait</span><span class="hljs-params">(<span class="hljs-type">int</span> *statloc)</span>;<br><span class="hljs-type">pid_t</span> <span class="hljs-title function_">waitpid</span><span class="hljs-params">(<span class="hljs-type">pid_t</span> pid, <span class="hljs-type">int</span> *statloc, <span class="hljs-type">int</span> options)</span><br></code></pre></td></tr></table></figure>
+
+<p>这两个函数的区别是： </p>
+<p>• 在一个子进程终止前， wait 使其调用者阻塞，而 waitpid 有一选择项，可使调用者不阻 塞。</p>
+<p> • waitpid并不等待第一个终止的子进程—它有若干个选择项，可以控制它所等待的进程，比如设置options为WNOHANG可以使调用非阻塞，即使没有子进程退出也会立即返回。</p>
+<p>如果一个子进程已经终止，是一个僵死进程，则wait立即返回并取得该子进程的状态，否则wait使其调用者阻塞直到一个子进程终止。如果调用者阻塞而且它有多个子进程，则在其中一个子进程终止时，wait就立即返回。因为wait返回终止子进程的进程ID，所以它总能了解是哪一个子进程终止了。</p>
+<p>对于waitpid的pid参数的解释与其值有关：</p>
+<ul>
+<li><strong>pid &#x3D;&#x3D; -1</strong>：等待任一子进程。于是在这一功能方面，waitpid与wait等效。</li>
+<li><strong>pid &gt; 0</strong>：等待其进程ID与pid相等的子进程。</li>
+<li><strong>pid &#x3D;&#x3D; 0</strong>：等待其组ID等于调用进程的组ID的任一子进程。</li>
+<li><strong>pid &lt; -1</strong>：等待其组ID等于pid的绝对值的任一子进程。</li>
+</ul>
+<p>statloc是in类型参数，函数写入其指向整型并写入子进程终止状态</p>
+<p><img src="/2024/05/28/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/image-20240528230027942.png" srcset="/img/loading.gif" lazyload alt="image-20240528230027942"></p>
+<p><img src="/2024/05/28/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/image-20240528230558060.png" srcset="/img/loading.gif" lazyload alt="image-20240528230558060"></p>
+<h1 id="wait3和wait4函数"><a href="#wait3和wait4函数" class="headerlink" title="wait3和wait4函数"></a>wait3和wait4函数</h1><h1 id="竞态条件"><a href="#竞态条件" class="headerlink" title="竞态条件"></a>竞态条件</h1><h1 id="exec函数"><a href="#exec函数" class="headerlink" title="exec函数"></a>exec函数</h1><p>当进程调用一种exec函数时，该进程完全由新程序代替，而新程序则从其main函数开始执行。因为调用exec并不创建新进程，所以前后的进程ID并未改变。exec只是用另一个新程序替换了当前进程的正文、数据、堆和栈段。</p>
+<p>执行新程序的进程还保持了原进程的下列特征：</p>
+<ul>
+<li>进程ID和父进程ID。</li>
+<li>实际用户ID和实际组ID。</li>
+<li>添加组ID。</li>
+<li>进程组ID。</li>
+<li>对话期ID。</li>
+<li>控制终端。</li>
+<li>闹钟尚余留的时间。</li>
+<li>当前工作目录。</li>
+<li>根目录。</li>
+<li>文件方式创建屏蔽字。</li>
+<li>文件锁。</li>
+<li>进程信号屏蔽。</li>
+<li>未决信号。</li>
+<li>资源限制。</li>
+<li>tms_utime, tms_stime, tms_cutime以及tms_ustime值。</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Linux/" class="category-chain-item">Linux</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Linux/" class="print-no-link">#Linux</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>进程控制</div>
+      <div>https://dextermorgan0417.github.io/2024/05/28/Linux/Linux进程通信/进程控制/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Dexter Morgan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年5月28日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar category-bar" style="margin-left: -1rem">
+    
+
+
+
+
+
+<div class="category-list">
+  
+  
+    
+    
+    
+    <div class="category row nomargin-x">
+      <a class="category-item 
+          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="Linux"
+        id="heading-edc9f0a5a5d57797bf68e37364743831" role="tab" data-toggle="collapse" href="#collapse-edc9f0a5a5d57797bf68e37364743831"
+        aria-expanded="true"
+      >
+        Linux
+        <span class="list-group-count">(8)</span>
+        <i class="iconfont icon-arrowright"></i>
+      </a>
+      
+      <div class="category-collapse collapse show" id="collapse-edc9f0a5a5d57797bf68e37364743831"
+           role="tabpanel" aria-labelledby="heading-edc9f0a5a5d57797bf68e37364743831">
+        
+        
+          
+  <div class="category-post-list">
+    
+    
+      
+      
+        <a href="/2024/06/02/Linux/Linux%E8%BF%9B%E7%A8%8B%E8%BF%BD%E8%B8%AAptrace/" title="Linux进程追踪ptrace"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Linux进程追踪ptrace</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/27/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E6%96%87%E4%BB%B6IO/" title="Linux进程通信-文件I/O"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Linux进程通信-文件I/O</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/27/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1-%E6%A0%87%E5%87%86IO%E5%BA%93/" title="Linux进程通信-标准IO库"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Linux进程通信-标准IO库</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/28/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/UNIX%E8%BF%9B%E7%A8%8B%E7%8E%AF%E5%A2%83/" title="UNIX进程环境"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">UNIX进程环境</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/29/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E4%BF%A1%E5%8F%B7/" title="信号"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">信号</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/28/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/" title="进程控制"
+           class="list-group-item list-group-item-action
+           active">
+          <span class="category-post">进程控制</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/30/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/" title="进程通信"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">进程通信</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/30/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E9%AB%98%E7%BA%A7IO/" title="高级IO"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">高级IO</span>
+        </a>
+      
+    
+  </div>
+
+        
+      </div>
+    </div>
+  
+</div>
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <span>Dexter</span></a> <span>Morgan</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

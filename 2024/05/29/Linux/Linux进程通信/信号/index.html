@@ -1,0 +1,819 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN,en,default" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/head.jpg">
+  <link rel="icon" href="/img/head.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Dexter Morgan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="概述信号是软件中断，本章先对信号机制进行综述，并说明每种信号的一般用法。然后分析早期实现的问题。在 分析存在的问题之后再说明解决这些问题的方法，这样有助于加深对改进机制的理解。本章也包含了很多并非100%正确的实例，这样做的目的是为了对其不足之处进行讨论。 信号概念每个信号都有名字，以SIG开头，在&lt;signal.h&gt;中，信号都被定义为正整数 很多条件可以产生一个信号：  当用户按某些">
+<meta property="og:type" content="article">
+<meta property="og:title" content="信号">
+<meta property="og:url" content="https://dextermorgan0417.github.io/2024/05/29/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E4%BF%A1%E5%8F%B7/index.html">
+<meta property="og:site_name" content="Dexter">
+<meta property="og:description" content="概述信号是软件中断，本章先对信号机制进行综述，并说明每种信号的一般用法。然后分析早期实现的问题。在 分析存在的问题之后再说明解决这些问题的方法，这样有助于加深对改进机制的理解。本章也包含了很多并非100%正确的实例，这样做的目的是为了对其不足之处进行讨论。 信号概念每个信号都有名字，以SIG开头，在&lt;signal.h&gt;中，信号都被定义为正整数 很多条件可以产生一个信号：  当用户按某些">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/29/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E4%BF%A1%E5%8F%B7/image-20240529152648165.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/29/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E4%BF%A1%E5%8F%B7/image-20240529152955798.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2024/05/29/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E4%BF%A1%E5%8F%B7/image-20240529161312736.png">
+<meta property="article:published_time" content="2024-05-29T06:58:17.000Z">
+<meta property="article:modified_time" content="2024-06-28T05:09:16.255Z">
+<meta property="article:author" content="Dexter Morgan">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dextermorgan0417.github.io/2024/05/29/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E4%BF%A1%E5%8F%B7/image-20240529152648165.png">
+  
+  
+  
+  <title>信号 - Dexter</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"dextermorgan0417.github.io","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"left","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":1},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 50vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Dexter</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/gamersky_01origin_01_20168131952B9E.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="信号"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-05-29 14:58" pubdate>
+          2024年5月29日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          27 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="padding-left: 2rem; margin-right: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">信号</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>信号是软件中断，本章先对信号机制进行综述，并说明每种信号的一般用法。然后分析早期实现的问题。在 分析存在的问题之后再说明解决这些问题的方法，这样有助于加深对改进机制的理解。本章也包含了很多并非100%正确的实例，这样做的目的是为了对其不足之处进行讨论。</p>
+<h1 id="信号概念"><a href="#信号概念" class="headerlink" title="信号概念"></a>信号概念</h1><p>每个信号都有名字，以SIG开头，在&lt;signal.h&gt;中，信号都被定义为正整数</p>
+<p>很多条件可以产生一个信号：</p>
+<ul>
+<li>当用户按某些终端键时，产生信号。在终端上按 DELETE 键通常产生中断信号（SIGINT）。这是停止一个已失去控制程序的方法。（第11章将说明此信号可被映射为终端上的任一字符。）</li>
+<li>硬件异常产生信号：除数为0、无效的存储访问等等。这些条件通常由硬件检测到，并将其通知内核。然后内核为该条件发生时正在运行的进程产生适当的信号。例如，对执行一个无效存储访问的进程产生一个SIGSEGV。</li>
+<li>进程用kill(2)函数可将信号发送给另一个进程或进程组。自然，有些限制：接收信号进程和发送信号进程的所有者必须相同，或发送信号进程的所有者必须是超级用户。</li>
+<li>用户可用kill(1)命令将信号发送给其他进程。此程序是kill函数的界面。常用此命令终止一个失控的后台进程。</li>
+<li>当检测到某种软件条件已经发生，并将其通知有关进程时也产生信号。这里并不是指硬件产生条件（如被0除），而是软件条件。例如SIGURG（在网络连接上传来非规定波特率的数据）、SIGPIPE（在管道的读进程已终止后一个进程写此管道），以及SIGALRM（进程所设置的闹钟时间已经超时）。</li>
+</ul>
+<p>信号是异步事件的经典实例。产生信号的事件对进程而言是随机出现的。进程不能只是测试一个变量（例如errno）来判别是否发生了一个信号，而是必须告诉<strong>内核</strong>：“在此信号发生时，请执行下列操作”。 因此，进程对于信号的处理不能是主动的，而是被动的，所以进程应该告诉内核，自己接受信号时作出什么动作</p>
+<p>可以要求系统在某个信号出现时按照下列三种方式中的一种进行操作：</p>
+<ol>
+<li>忽略此信号：大多数信号都可使用这种方式进行处理，但有两种信号却决不能被忽略。它们是：SIGKILL 和 SIGSTOP。这两种信号不能被忽略的原因是：它们向超级用户提供一种使进程终止或停止的可靠方法。另外，如果忽略某些由硬件异常产生的信号（例如非法存储访问或除以0），则进程的行为是未定义的。</li>
+<li>捕捉信号：为了做到这一点要通知内核在某种信号发生时，调用一个用户函数。在用户函数中，可执行用户希望对这种事件进行的处理。例如，若编写一个命令解释器，当用户用键盘产生中断信号时，很可能希望返回到程序的主循环，终止系统正在为该用户执行的命令。如果捕捉到SIGCHLD信号，则表示子进程已经终止，所以此信号的捕捉函数可以调用waitpid以取得该子进程的进程ID以及它的终止状态。又例如，如果进程创建了临时文件，那么可能要为SIGTERM信号编写一个信号捕捉函数以清除临时文件（kill命令传送的系统默认信号是终止信号）。</li>
+<li>执行系统默认动作：表 10-1 给出了对每一种信号的系统默认动作。注意，对大多数信号的系统默认动作是终止该进程。</li>
+</ol>
+<p><img src="/2024/05/29/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E4%BF%A1%E5%8F%B7/image-20240529152648165.png" srcset="/img/loading.gif" lazyload alt="image-20240529152648165"></p>
+<p><img src="/2024/05/29/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E4%BF%A1%E5%8F%B7/image-20240529152955798.png" srcset="/img/loading.gif" lazyload alt="image-20240529152955798"></p>
+<p>在系统默认动作列，“终止w&#x2F;core”表示在进程当前工作目录的core文件中复制了该进程的存储图像（该文件名为core，由此可以看出这种功能很久之前就是UNIX功能的一部分）。大多数UNIX调试程序都使用core文件以检查进程在终止时的状态。</p>
+<h1 id="signal函数"><a href="#signal函数" class="headerlink" title="signal函数"></a>signal函数</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> (*signal(<span class="hljs-type">int</span> signo, <span class="hljs-type">void</span> (*fun)(<span class="hljs-type">int</span>)))(<span class="hljs-type">int</span>);<br></code></pre></td></tr></table></figure>
+
+<p>func的值是：</p>
+<p>(a)常数SIG_IGN</p>
+<p>(b)常数SIG_DFL<br>(c)当接到此信号后要调用的函数的地址。</p>
+<p>如果指定SIG_IGN，则向内核表示忽略此信号。（记住有两个信号SIGKILL和SIGSTOP不能忽略。）如果指定SIG_DFL，则表示接到此信号后的动作是系统默认动作（见表10-1中的最后1列）</p>
+<p>当指定函数地址时，我们称此为捕捉此信号。我 们称此函数为信号处理程序（signal handler）或信号捕捉函数（signal-catching function）。</p>
+<p>调用signal函数来设置一个信号的处理程序时，它会返回一个指向之前与该信号相关联的处理程序的指针。</p>
+<h2 id="程序起动"><a href="#程序起动" class="headerlink" title="程序起动"></a>程序起动</h2><p>执行程序时，所有信号的状态都是系统默认或忽略。比较特殊的是，exec函数将原先设置为要捕捉的信号都更改为默认动作，其他信号的状态则不变（一个进程原先要捕捉的信号，当其执行一个新程序后， 就自然地不能再捕捉了，因为信号捕捉函数的地址很可能在所执行的新程序文件中已无意义）。</p>
+<h2 id="进程创建"><a href="#进程创建" class="headerlink" title="进程创建"></a>进程创建</h2><p>当一个进程调用fork时，其子进程继承父进程的信号处理方式。因为子进程在开始时复制 了父进程存储图像，所以信号捕捉函数的地址在子进程中是有意义的。(因为fork几乎等同于完全复制)</p>
+<h1 id="中断的系统调用"><a href="#中断的系统调用" class="headerlink" title="中断的系统调用"></a>中断的系统调用</h1><p>早期UNIX系统的一个特性是：如果在进程执行一个低速系统调用而阻塞期间捕捉到一个信号，则该系统调用就被中断不再继续执行。该系统调用返回出错，其errno设置为EINTR。这样处理的理由是：因为一个信号发生了，进程捕捉到了它，这意味着已经发生了某种事情，所以是个好机会应当唤醒阻塞的系统调用。</p>
+<p>在UNIX系统中，系统调用可以分为两类：低速系统调用（slow system calls）和其他系统调用。</p>
+<ol>
+<li>低速系统调用（低速I&#x2F;O系统调用）：<ul>
+<li>低速系统调用是指可能会阻塞进程并等待某些事件发生的系统调用。例如，读取文件时可能需要等待磁盘I&#x2F;O操作完成，或者等待网络数据到达等。</li>
+<li>这些调用的执行时间相对较长，因为它们需要等待外部事件的发生。</li>
+<li>低速系统调用的执行过程中，如果捕捉到信号，则调用会被中断，进程可能会被唤醒，系统调用返回错误（通常errno被设置为EINTR）。</li>
+</ul>
+</li>
+<li>其他系统调用（非低速系统调用）：<ul>
+<li>其他系统调用通常是不会阻塞进程的，它们的执行时间相对较短，不需要等待外部事件的发生。</li>
+<li>这些调用通常包括对内存、进程管理、文件描述符操作等的操作，例如fork、exec、exit等。</li>
+<li>如果在执行过程中捕捉到信号，通常不会中断这些调用，而是由信号处理程序处理完毕后继续执行。</li>
+</ul>
+</li>
+</ol>
+<p>总的来说，低速系统调用是可能会被信号中断并导致阻塞的系统调用，而其他系统调用通常不会被中断，它们的执行时间较短且不需要等待外部事件。</p>
+<h1 id="可再入函数（可重入）"><a href="#可再入函数（可重入）" class="headerlink" title="可再入函数（可重入）"></a>可再入函数（可重入）</h1><p>进程捕捉到信号并继续执行时，它首先执行该信号处理程序中的指令。如果从信号处理程序返回（例如没有调用exit或longjmp），则继续执行在捕捉到信号时进程正在执行的正常指令序列（这类似于硬件中断发生时所做的）。但在信号处理程序中，不能判断捕捉到信号时进程执行到何处。如果进程正在执行malloc，在其堆中分配另外的存储空间，而此时由于捕捉到信号插入执行该信号处理程序，其中又调用malloc，这时会发生什么？又例如若进程正在执行getpwnam（见6.2节）这种将其结果存放在静态存储单元中的函数，而插入执行的信号处理程序中又调用这样的函数，这时又会发生什么呢？在malloc例中，可能会对进程造成破坏，因为malloc通常为它所分配的存储区保持一个连接表，而插入执行信号处理程序时，进程可能正在更改此连接表。在getpwnam的例子中，正常返回给调用者的信息可能由返回至信号处理程序的信息覆盖。</p>
+<p>实际是内核捕捉信号后，进程执行权交给信号处理函数，此时会中断正在运行的代码，可能会造成函数的重入(一个函数被运行到一半，放弃并再次运行这个函数)</p>
+<p><img src="/2024/05/29/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E4%BF%A1%E5%8F%B7/image-20240529161312736.png" srcset="/img/loading.gif" lazyload alt="image-20240529161312736"></p>
+<p>可重入函数是指在多个线程或进程同时调用时，函数能够安全地执行而不会导致不正确的结果。这意味着函数内部没有使用任何共享的全局变量或静态变量，并且对于每次调用，函数使用的所有数据都是通过函数参数传递的，而不是通过共享的全局数据。</p>
+<p>具体来说，可重入函数具有以下特性：</p>
+<ol>
+<li>不使用全局变量或静态变量，而是通过参数传递所有需要的数据。</li>
+<li>不修改任何全局状态或静态状态，包括文件IO、堆内存分配等。</li>
+<li>不会被中断时处于不一致状态，即使在信号处理程序中也可以安全地调用。</li>
+</ol>
+<p>可重入函数在多线程环境中非常重要，因为多个线程可能会同时调用同一个函数，如果函数不是可重入的，那么在多线程环境中可能会导致数据不一致或者竞态条件等问题。因此，编写可重入函数是多线程编程中的一个重要考虑因素。</p>
+<h1 id="可靠信号术语和语义"><a href="#可靠信号术语和语义" class="headerlink" title="可靠信号术语和语义"></a>可靠信号术语和语义</h1><h1 id="kill和raise函数"><a href="#kill和raise函数" class="headerlink" title="kill和raise函数"></a>kill和raise函数</h1><p>kill函数将信号发送给进程或进程组。raise函数则允许进程向自身发送信号。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">kill</span><span class="hljs-params">(<span class="hljs-type">pid_t</span> pid, <span class="hljs-type">int</span> signo)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">raise</span><span class="hljs-params">(<span class="hljs-type">int</span> signo)</span>;<br></code></pre></td></tr></table></figure>
+
+<p><code>kill</code>函数的<code>pid</code>参数有四种不同的情况：</p>
+<ul>
+<li><code>pid &gt; 0</code>：将信号发送给进程ID为<code>pid</code>的进程。</li>
+<li><code>pid == 0</code>：将信号发送给与发送进程的进程组ID相同的所有进程，且发送进程有权限向这些进程发送信号。这里的术语“所有进程”不包括实现定义的系统进程集。</li>
+<li><code>pid &lt; 0</code>：将信号发送给进程组ID等于<code>pid</code>绝对值的所有进程，且发送进程有权限向这些进程发送信号。同样，“所有进程”并不包括系统进程集中的进程。</li>
+<li><code>pid == -1</code>：POSIX.1未定义此种情况。</li>
+</ul>
+<h1 id="alarm和pause函数"><a href="#alarm和pause函数" class="headerlink" title="alarm和pause函数"></a>alarm和pause函数</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">unsigned</span> <span class="hljs-title function_">intalarm</span><span class="hljs-params">(<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> seconds)</span>;<br></code></pre></td></tr></table></figure>
+
+<p>使用<code>alarm</code>函数可以设置一个时间值（闹钟时间），在将来的某个时刻该时间值会被超过。当所设置的时间值被超过后，会产生SIGALRM信号。如果不忽略或不捕捉此信号，则其默认动作是终止该进程。</p>
+<p>返回值是以前设置的闹钟时间的剩余秒数。如果之前没有设置过闹钟时间，则返回0。</p>
+<p>如果有以前登记的尚未超过的闹钟时间，而且seconds值是0，则取消以前的闹钟时间，其 余留值仍作为函数的返回值</p>
+<p>每个进程只能有一个闹钟时间。</p>
+<p>pause函数使调用进程挂起直至捕捉到一个信号</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">pause</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;<br></code></pre></td></tr></table></figure>
+
+<p>信息必须有处理 pause才会返回</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Linux/" class="category-chain-item">Linux</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Linux/" class="print-no-link">#Linux</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>信号</div>
+      <div>https://dextermorgan0417.github.io/2024/05/29/Linux/Linux进程通信/信号/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Dexter Morgan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年5月29日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar category-bar" style="margin-left: -1rem">
+    
+
+
+
+
+
+<div class="category-list">
+  
+  
+    
+    
+    
+    <div class="category row nomargin-x">
+      <a class="category-item 
+          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="Linux"
+        id="heading-edc9f0a5a5d57797bf68e37364743831" role="tab" data-toggle="collapse" href="#collapse-edc9f0a5a5d57797bf68e37364743831"
+        aria-expanded="true"
+      >
+        Linux
+        <span class="list-group-count">(8)</span>
+        <i class="iconfont icon-arrowright"></i>
+      </a>
+      
+      <div class="category-collapse collapse show" id="collapse-edc9f0a5a5d57797bf68e37364743831"
+           role="tabpanel" aria-labelledby="heading-edc9f0a5a5d57797bf68e37364743831">
+        
+        
+          
+  <div class="category-post-list">
+    
+    
+      
+      
+        <a href="/2024/06/02/Linux/Linux%E8%BF%9B%E7%A8%8B%E8%BF%BD%E8%B8%AAptrace/" title="Linux进程追踪ptrace"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Linux进程追踪ptrace</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/27/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E6%96%87%E4%BB%B6IO/" title="Linux进程通信-文件I/O"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Linux进程通信-文件I/O</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/27/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1-%E6%A0%87%E5%87%86IO%E5%BA%93/" title="Linux进程通信-标准IO库"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Linux进程通信-标准IO库</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/28/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/UNIX%E8%BF%9B%E7%A8%8B%E7%8E%AF%E5%A2%83/" title="UNIX进程环境"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">UNIX进程环境</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/29/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E4%BF%A1%E5%8F%B7/" title="信号"
+           class="list-group-item list-group-item-action
+           active">
+          <span class="category-post">信号</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/28/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/" title="进程控制"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">进程控制</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/30/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/" title="进程通信"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">进程通信</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2024/05/30/Linux/Linux%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/%E9%AB%98%E7%BA%A7IO/" title="高级IO"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">高级IO</span>
+        </a>
+      
+    
+  </div>
+
+        
+      </div>
+    </div>
+  
+</div>
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <span>Dexter</span></a> <span>Morgan</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
