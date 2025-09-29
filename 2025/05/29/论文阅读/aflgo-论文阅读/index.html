@@ -24,9 +24,9 @@
 <meta property="og:description" content="摘要现有的灰盒模糊测试无法有效地定向测试, 此文介绍了定向灰盒模糊测试 Directed Greybox Fuzzing (DGF),旨在高效生成能够到达给定目标程序位置的输入.开发并评估了一种基于模拟退火的能量调度策略，该策略逐渐为接近目标位置的种子分配更多能量，同时减少远离目标的种子的能量. 根据实验表明,AFLGo表现好于基于符号执行的白盒模糊测试和非定向的灰盒模糊测试.AFLgo在LibX">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-05-29T02:31:13.000Z">
-<meta property="article:modified_time" content="2025-06-02T08:47:13.825Z">
+<meta property="article:modified_time" content="2025-09-22T03:01:09.295Z">
 <meta property="article:author" content="Dexter Morgan">
-<meta property="article:tag" content="FUZZ">
+<meta property="article:tag" content="paper">
 <meta name="twitter:card" content="summary_large_image">
   
   
@@ -220,7 +220,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          654 字
+          2.1k 字
         
       </span>
     
@@ -231,7 +231,7 @@
         
         
         
-          6 分钟
+          18 分钟
         
       </span>
     
@@ -312,6 +312,55 @@
 <p>运行的时候计算每个已经执行的基本块的距离,为种子计算这些值的均值</p>
 <p>本工具使用模拟退火算法作为元启发式算法,并使用能量调度实现.</p>
 <p>将分析移至编译阶段,减小了运行时开销</p>
+<h1 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h1><h2 id="过程简述"><a href="#过程简述" class="headerlink" title="过程简述"></a>过程简述</h2><p>1.编译并插桩目标以产生日志与 dot 文件<br>用 aflgo-clang &#x2F; aflgo-clang++（由 aflgo-clang.c）编译目标，加载 LLVM 插件 aflgo-pass.so.cc。<br>插桩过程输出：dot-files&#x2F;cfg.<Func>.dot、BBnames.txt、BBcalls.txt、Fnames.txt、Ftargets.txt（写入到指定临时目录）。</p>
+<p>2.生成并合并 Call-Graph（CG）<br>使用 LLVM opt -dot-callgraph（脚本封装在 gen_distance_orig.sh 或 gen_distance_fast.py 的 opt_callgraph）为编译产物生成 callgraph.dot，若有多二进制则合并多个 callgraph。</p>
+<p>3.计算 Call-Graph 层面的距离（可选先行）<br>调用距离计算器（默认优先 distance&#x2F;distance_calculator&#x2F;distance.bin，或 Python 版 distance.py）对 callgraph.dot 与 Ftargets.txt&#x2F;Fnames.txt 计算 CG 距离，输出如 distance.callgraph.txt（或 callgraph.distance.txt）</p>
+<p>4.逐函数计算 CFG 层面的距离（并行化常用）<br>对每个 cfg.<Func>.dot 调用距离计算器（distance.bin&#x2F;distance.py），结合 BBtargets.txt、BBnames.txt、BBcalls.txt 和上一步的 CG 距离，输出每个函数对应的 cfg.<Func>.distances.txt。</p>
+<p>5.合并所有 CFG 距离文件到单个 distance 配置<br>将所有 *.distances.txt 合并为最终文件，例如 distance.cfg.txt（gen_distance_fast.py &#x2F; gen_distance_orig.sh 会做此步）。</p>
+<p>6.用 distance 文件重新编译以注入 distance 信息（可选选择性插桩）<br>重新用 aflgo-clang 并传 -distance&#x3D;$(readlink -e <path>&#x2F;distance.cfg.txt)，aflgo-pass 会读取并在插桩中使用每个 basic block 的距离数值。</p>
+<p>7.用 AFL 进行定向模糊（Directed Fuzzing）<br>用重编译后的二进制配合 afl-2.57b&#x2F;afl-fuzz 启动定向模糊，距离信息会影响 power schedule &#x2F; 优先级。</p>
+<h2 id="与AFL区别"><a href="#与AFL区别" class="headerlink" title="与AFL区别"></a>与AFL区别</h2><h3 id="距离bitmap"><a href="#距离bitmap" class="headerlink" title="距离bitmap"></a>距离bitmap</h3><p>在原有的bitmap后门追加一块额外的槽,用于存放distance的整型值</p>
+<p>每次执行到具有distance的BB,就会把distance加到对于的位置,这个位置是和原有生成的hash值是一致的</p>
+<p>再后面有个槽位存储计数器的值</p>
+<h2 id="distance文件夹"><a href="#distance文件夹" class="headerlink" title="distance文件夹"></a>distance文件夹</h2><p>en_distance_fast.py</p>
+<p>作用：并行化&#x2F;驱动脚本，组织生成 call-graph&#x2F;CFG、拆分任务并调用实际的距离计算程序（Python 或 C++ 二进制），然后合并结果。是主流程的调度器。<br>输入：preprocessing 生成的 BBnames.txt&#x2F;BBcalls.txt&#x2F;Ftargets.txt 等（以及编译生成的 callgraph&#x2F;CFG 文件）。<br>输出：合并后的距离文件（供 instrument&#x2F;aflgo-pass.so.cc -distance 使用）。<br>依赖：会调用 distance_calculator 下的脚本&#x2F;二进制、shell 工具，可能需要并行工具&#x2F;Python 环境。<br>gen_distance_orig.sh</p>
+<p>作用：早期的单进程&#x2F;串行 distance 计算流程脚本（慢版），保留作参考或快速小规模测试。<br>输入&#x2F;输出：与 fast 脚本相同，但不并行。<br>add_edges.py</p>
+<p>作用：处理&#x2F;修补 call-graph&#x2F;CFG 数据的辅助脚本（如把某些调用关系加入图），用于生成更完整的图供距离计算。<br>用途：在生成的 callgraph 有遗漏或需要合并手工信息时使用。<br>merge_callgraphs.py</p>
+<p>作用：把多个子任务&#x2F;分片产生的 callgraph&#x2F;CFG 信息合并成全局图，为后续距离计算提供完整视图。<br>用途：配合 gen_distance_fast.py 的分片并行输出合并结果。<br>子目录：distance_calculator&#x2F;</p>
+<p>distance.py</p>
+<p>作用：纯 Python 实现的距离计算器（通常基于 NetworkX 或自实现的图算法），读取 callgraph&#x2F;CFG，计算从每个基本块到目标集&#x2F;目标点的最短距离（或自定义距离度量），输出每个 BB 的 distance。<br>优点：易读、便于修改；缺点：对大项目可能慢（单线程 Python）。<br>依赖：Python、NetworkX（若使用）或标准 Python 库。<br>distance.bin.cc</p>
+<p>作用：C++ 实现的高性能距离计算器（通常使用 Boost Graph 或自实现图算法），编译为二进制 distance.bin，用于在大规模项目上快速计算距离。<br>优点：速度快、适合并行&#x2F;批量运行；缺点：需编译（CMake）。<br>依赖：Boost&#x2F;编译链，CMakeLists.txt 提供构建规则。<br>CMakeLists.txt</p>
+<p>作用：构建 distance.bin.cc（生成可执行二进制）的 CMake 配置。<br>其它</p>
+<p>.clang-format<br>作用：代码风格配置（用于 distance_calculator 源代码的格式化）。</p>
+<h2 id="距离计算"><a href="#距离计算" class="headerlink" title="距离计算"></a>距离计算</h2><p>用最短路径（Dijkstra）按 1&#x2F;(1+dist) 的倒数加权并做归一化，得到“距离值”；CFG 模式还会结合 CG 层给出的函数级距离（带 10 倍因子）；最终插桩端把该浮点值乘 100 存为整数。</p>
+<h2 id="aflgo-pass-so-cc"><a href="#aflgo-pass-so-cc" class="headerlink" title="aflgo-pass.so.cc"></a>aflgo-pass.so.cc</h2><p>两个模式</p>
+<p>预处理, 由-targets -outdir 触发,遍历模块,导出函数CFG,记录 basic-block 名单、callsite 映射、函数名与目标函数列表，供后续的distance插计算使用；</p>
+<p>distance 插桩模式（由 -distance <file> 触发）——读取 distance 文件并在每个 basic block 的 IR 中注入运行时逻辑，把 distance 值累加到 AFL 的共享内存（SHM）特定槽位，从而在 fuzz 时被利用为 directed-fuzz 的信号。</p>
+<h3 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h3><ol>
+<li>代码首先创建三个opt对象负责注册命令行参数选项</li>
+<li>读取distance文件</li>
+<li>做AFL标准插桩</li>
+<li>如果BB在distance中,则做距离插桩,并做计数器+1</li>
+</ol>
+<p>默认不做原子操作,多线程下产生竞态</p>
+<h3 id="getDebugLoc"><a href="#getDebugLoc" class="headerlink" title="getDebugLoc()"></a>getDebugLoc()</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title">getDebugLoc</span><span class="hljs-params">(<span class="hljs-type">const</span> Instruction *I, std::string &amp;Filename, <span class="hljs-type">unsigned</span> &amp;Line)</span></span><br></code></pre></td></tr></table></figure>
+
+<p>从给定的LLVM指令I 提去源码调试位置,包括原文件名和行号</p>
+<h3 id="isBlacklisted"><a href="#isBlacklisted" class="headerlink" title="isBlacklisted()"></a>isBlacklisted()</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">isBlacklisted</span><span class="hljs-params">(<span class="hljs-type">const</span> Function *F)</span></span><br></code></pre></td></tr></table></figure>
+
+<p>判断函数是否在黑名单</p>
+<p>过滤了以下面字符串开头的函数</p>
+<figure class="highlight 1c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs 1c"><span class="hljs-string">&quot;asan.&quot;</span>,<br><span class="hljs-string">&quot;llvm.&quot;</span>,<br><span class="hljs-string">&quot;sancov.&quot;</span>,<br><span class="hljs-string">&quot;__ubsan_handle_&quot;</span>,<br><span class="hljs-string">&quot;free&quot;</span>,<br><span class="hljs-string">&quot;malloc&quot;</span>,<br><span class="hljs-string">&quot;calloc&quot;</span>,<br><span class="hljs-string">&quot;realloc&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>然后注册AFLCoverage类</p>
+<h2 id="距离信息的计算"><a href="#距离信息的计算" class="headerlink" title="距离信息的计算"></a>距离信息的计算</h2><p>afl-fuzz.c 950 has_new_bits()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Calculate distance of current input to targets */</span><br>  <br>  u64* total_distance = (u64*) (trace_bits + MAP_SIZE);<br>  u64* total_count = (u64*) (trace_bits + MAP_SIZE + <span class="hljs-number">8</span>);<br><br>  <span class="hljs-keyword">if</span> (*total_count &gt; <span class="hljs-number">0</span>)<br>    cur_distance = (<span class="hljs-type">double</span>) (*total_distance) / (<span class="hljs-type">double</span>) (*total_count);<br>  <span class="hljs-keyword">else</span><br>    cur_distance = <span class="hljs-number">-1.0</span>;<br><br></code></pre></td></tr></table></figure>
+
+<p>有命中则计算平均距离</p>
+<h2 id="距离调度和能量计算"><a href="#距离调度和能量计算" class="headerlink" title="距离调度和能量计算"></a>距离调度和能量计算</h2><p>afl-fuzz.c calculate_score() calibrate_case()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c">q-&gt;distance = cur_distance;<br><br> <span class="hljs-keyword">if</span> (cur_distance &gt; <span class="hljs-number">0</span>) &#123;<br><br>   <span class="hljs-keyword">if</span> (max_distance &lt;= <span class="hljs-number">0</span>) &#123;<br>     max_distance = cur_distance;<br>     min_distance = cur_distance;<br>   &#125;<br>   <span class="hljs-keyword">if</span> (cur_distance &gt; max_distance) max_distance = cur_distance;<br>   <span class="hljs-keyword">if</span> (cur_distance &lt; min_distance) min_distance = cur_distance;<br><br> &#125;<br></code></pre></td></tr></table></figure>
+
+<p>模拟退火和距离的使用</p>
 
                 
               </div>
@@ -330,7 +379,7 @@
     
       <span class="category-chain">
         
-  <a href="/categories/FUZZ/" class="category-chain-item">FUZZ</a>
+  <a href="/categories/paper/" class="category-chain-item">paper</a>
   
   
 
@@ -345,7 +394,7 @@
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/FUZZ/" class="print-no-link">#FUZZ</a>
+        <a href="/tags/paper/" class="print-no-link">#paper</a>
       
     </div>
   
@@ -423,17 +472,17 @@
     
     <div class="category row nomargin-x">
       <a class="category-item 
-          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="FUZZ"
-        id="heading-f432409f8745e1df9d425828834095be" role="tab" data-toggle="collapse" href="#collapse-f432409f8745e1df9d425828834095be"
+          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="paper"
+        id="heading-7e3f660480ab1640de8024c200b5a4d3" role="tab" data-toggle="collapse" href="#collapse-7e3f660480ab1640de8024c200b5a4d3"
         aria-expanded="true"
       >
-        FUZZ
-        <span class="list-group-count">(2)</span>
+        paper
+        <span class="list-group-count">(7)</span>
         <i class="iconfont icon-arrowright"></i>
       </a>
       
-      <div class="category-collapse collapse show" id="collapse-f432409f8745e1df9d425828834095be"
-           role="tabpanel" aria-labelledby="heading-f432409f8745e1df9d425828834095be">
+      <div class="category-collapse collapse show" id="collapse-7e3f660480ab1640de8024c200b5a4d3"
+           role="tabpanel" aria-labelledby="heading-7e3f660480ab1640de8024c200b5a4d3">
         
         
           
@@ -442,10 +491,46 @@
     
       
       
-        <a href="/2025/04/07/AFL++/" title="AFL++分析"
+        <a href="/2025/09/07/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/Beacon/" title="Beacon"
            class="list-group-item list-group-item-action
            ">
-          <span class="category-post">AFL++分析</span>
+          <span class="category-post">Beacon</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2025/09/07/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/DAFL/" title="DAFL"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">DAFL</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2025/09/18/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/EMS/" title="EMS"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">EMS</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2025/09/15/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/Halo/" title="Halo"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Halo</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2025/06/17/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/WindRanger/" title="WindRanger"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">WindRanger</span>
         </a>
       
     
@@ -455,6 +540,15 @@
            class="list-group-item list-group-item-action
            active">
           <span class="category-post">aflgo-论文阅读</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2025/07/08/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/selectfuzz/" title="selectfuzz"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">selectfuzz</span>
         </a>
       
     
