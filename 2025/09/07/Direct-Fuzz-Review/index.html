@@ -16,14 +16,17 @@
   <meta name="author" content="Dexter Morgan">
   <meta name="keywords" content="">
   
-    <meta property="og:type" content="article">
+    <meta name="description" content="简述定向灰盒模糊测试DGF论文总结笔记 AFLgo第一个提出DGF的概念,在CCS17上发布 在AFL集成模拟退火算法,定义过程距离度量.在CG计算函数距离,在CFG结合函数距离计算BB距离并放大函数调用影响. key: 距离计算  模拟退火 WindRangerICSE2022 引入偏差基本块DDB  DDB识别: 静态分析: 通过反向传播,分析这种BB 后继中至少存在一个一定能到达目标位置,至">
+<meta property="og:type" content="article">
 <meta property="og:title" content="Direct-Fuzz-Review">
 <meta property="og:url" content="https://dextermorgan0417.github.io/2025/09/07/Direct-Fuzz-Review/index.html">
 <meta property="og:site_name" content="Dexter">
+<meta property="og:description" content="简述定向灰盒模糊测试DGF论文总结笔记 AFLgo第一个提出DGF的概念,在CCS17上发布 在AFL集成模拟退火算法,定义过程距离度量.在CG计算函数距离,在CFG结合函数距离计算BB距离并放大函数调用影响. key: 距离计算  模拟退火 WindRangerICSE2022 引入偏差基本块DDB  DDB识别: 静态分析: 通过反向传播,分析这种BB 后继中至少存在一个一定能到达目标位置,至">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-07T08:41:00.000Z">
-<meta property="article:modified_time" content="2025-09-07T08:41:00.371Z">
+<meta property="article:modified_time" content="2025-11-24T09:16:46.441Z">
 <meta property="article:author" content="Dexter Morgan">
+<meta property="article:tag" content="fuzz">
 <meta name="twitter:card" content="summary_large_image">
   
   
@@ -146,6 +149,18 @@
           
           
             <li class="nav-item">
+              <a class="nav-link" href="/directory/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>目录索引</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
               <a class="nav-link" href="/tags/" target="_self">
                 <i class="iconfont icon-tags-fill"></i>
                 <span>标签</span>
@@ -217,7 +232,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          0 字
+          4k 字
         
       </span>
     
@@ -228,7 +243,7 @@
         
         
         
-          1 分钟
+          33 分钟
         
       </span>
     
@@ -283,7 +298,254 @@
             
               <div class="markdown-body">
                 
-                
+                <h1 id="简述"><a href="#简述" class="headerlink" title="简述"></a>简述</h1><p>定向灰盒模糊测试DGF论文总结笔记</p>
+<h1 id="AFLgo"><a href="#AFLgo" class="headerlink" title="AFLgo"></a>AFLgo</h1><p>第一个提出DGF的概念,在CCS17上发布</p>
+<p>在AFL集成模拟退火算法,定义过程距离度量.在CG计算函数距离,在CFG结合函数距离计算BB距离并放大函数调用影响.</p>
+<p>key: 距离计算  模拟退火</p>
+<h1 id="WindRanger"><a href="#WindRanger" class="headerlink" title="WindRanger"></a>WindRanger</h1><p>ICSE2022 引入偏差基本块DDB </p>
+<p><strong>DDB识别</strong>: 静态分析: 通过反向传播,分析这种BB 后继中至少存在一个一定能到达目标位置,至少存在一个一定不能到达目标位置.</p>
+<p><strong>探测式污点分析</strong>：通过字节级变异（如位翻转、插入、删除）推断输入字节如何影响分支约束变量，生成效应器图（Effector Map），用于量化约束难度</p>
+<p><strong>种子距离计算</strong>：使用DBB的平均距离，并结合数据流信息调整距离（公式4和5），其中约束难度由影响字节数决定，避免复杂数据转换带来的偏差。</p>
+<p><strong>数据流敏感变异</strong>：在利用阶段，优先变异与DBB约束相关的输入字节；如果输入字节与约束变量值匹配，则直接替换为比较值。</p>
+<h1 id="Beacon"><a href="#Beacon" class="headerlink" title="Beacon"></a>Beacon</h1><p>IEEE sp 2022</p>
+<p>静态预处理分析,后向区间分析反推必要提前条件</p>
+<p>运行路径修剪,插入断言,若不满足条件,提前终止</p>
+<h1 id="CAFL"><a href="#CAFL" class="headerlink" title="CAFL"></a>CAFL</h1><p>2021 USENIX  约束引导的DGF</p>
+<p>一个约束由<strong>目标站点</strong>和可选的<strong>数据条件</strong>组成.定义新的距离度量,结合控制流距离和数值距离</p>
+<p>由崩溃转储和补丁变更日志生成约束</p>
+<h1 id="SELECTFUZZ"><a href="#SELECTFUZZ" class="headerlink" title="SELECTFUZZ"></a>SELECTFUZZ</h1><p>IEEE sp 2023</p>
+<p>SELECTFUZZ通过识别并仅探索与目标相关的代码</p>
+<ul>
+<li><strong>路径分叉代码（Path-divergent code）</strong>：决定控制流是否能到达目标。</li>
+<li><strong>数据依赖代码（Data-dependent code）</strong>：影响目标代码中关键变量的值。</li>
+</ul>
+<p>使用新的距离计算 先计算概率,对分支跳转都进行等概率计算,再将概率倒数作为距离</p>
+<h1 id="GREYONE"><a href="#GREYONE" class="headerlink" title="GREYONE"></a>GREYONE</h1><p>USENIX 2020</p>
+<p>模糊测试驱动的污点推断(FTI):</p>
+<p>在试点阶段，系统逐个字节变异输入种子，并监控路径约束中变量的值变化。若变量值随输入字节变异而改变，则判定该变量依赖于该字节. 仅监控分支相关变量</p>
+<p>FTI能区分输入字节的直接拷贝（如魔术数字）和间接拷贝（如经转换后的值），为精准变异奠定基础。</p>
+<p>污点引导的变异策略:</p>
+<p>通过FTI提供的信息</p>
+<p><strong>字节与分支优先级</strong>：</p>
+<ul>
+<li><strong>字节权重</strong>：根据输入字节影响的未探索分支数量排序，优先变异高权重字节。</li>
+<li><strong>分支权重</strong>：根据分支依赖的高权重字节数量排序，优先探索高权重分支</li>
+</ul>
+<p><strong>精准变异</strong>：</p>
+<ul>
+<li><strong>直接拷贝</strong>：替换为期望值（如魔术数字）或小幅变化（如长度检查中的±1）。</li>
+<li><strong>间接拷贝</strong>：结合随机位翻转和算术运算，并通过一致性引导优化。</li>
+</ul>
+<p><strong>选择进化方向</strong></p>
+<ul>
+<li><strong>一致性计算</strong>：度量未探索分支中污点变量与期望值的匹配程度（如相等比特数），作为种子评分标准（公式4-6）。</li>
+<li><strong>二维种子队列</strong>：扩展传统队列结构，同时考虑路径覆盖和一致性，优先选择高一致性种子（图4）。</li>
+<li><strong>实时变异重基</strong>：发现高一致性种子时，即时切换正在进行的变异，提升效率（实验显示漏洞发现速度提升3倍）。</li>
+</ul>
+<h1 id="Titan"><a href="#Titan" class="headerlink" title="Titan"></a>Titan</h1><p>2024 IEEE SP</p>
+<p>DGF在面临多目标时存在退化为非定向的情况,这种现象被称为“协同无知问题”（synergy ignorance problem）</p>
+<p>Titan通过静态分析推断目标间的路径条件相关性，并基于此优化种子调度和变异策略。其工作流程分为两阶段：</p>
+<ol>
+<li><p><strong>静态协同推断（Static Synergy Inference）</strong>：</p>
+<ul>
+<li>使用区间抽象（interval domain）分析目标点的路径条件，生成多目标可达性摘要（Multi-target Reachability Summary），定义变量在特定程序点的取值范围。</li>
+<li>推断目标间的三类相关性：<ul>
+<li><strong>重叠（Overlap）</strong>：多个目标共享相同条件（如变量a &gt; 5）。</li>
+<li><strong>冲突（Conflict）</strong>：条件互斥（如变量b ≤ 1与b &gt; 1）。</li>
+<li><strong>独立（Independence）</strong>：条件涉及不同变量，互不影响。</li>
+</ul>
+</li>
+</ul>
+<p><em>图2展示了目标间可能的相关性类型，为优化调度和变异提供基础。</em></p>
+</li>
+<li><p><strong>协同引导的模糊测试（Synergy-guided Fuzzing）</strong>：</p>
+<ul>
+<li><strong>协同感知的种子调度</strong>：根据相关性动态确定种子应关注的目标集，并基于满足的条件比例（而非控制流距离）评估种子潜力。例如，冲突条件用于过滤不相关目标，独立条件用于<strong>并行优化</strong>。</li>
+<li><strong>多目标导向的变异</strong>：通过惰式污点分析识别独立字节，并优先变异影响多个目标的字节，减少执行次数。</li>
+</ul>
+</li>
+</ol>
+<h1 id="PDGF"><a href="#PDGF" class="headerlink" title="PDGF"></a>PDGF</h1><p>IEEE sp 2024</p>
+<p>论文提出了一种新型定向灰盒模糊测试方法PDGF，通过将程序划分为前驱区域和非前驱区域，优化模糊测试的效率和路径多样性</p>
+<p>1.前驱识别（Predecessor Identification）</p>
+<ul>
+<li><strong>定义</strong>：前驱包括目标可达的控制流图（iCFG）中的基本块（PBB）和边（PE）。静态分析通过广度优先搜索从目标站点反向遍历iCFG，初始识别PBB，并标记其ID（前两位设为“00”）。</li>
+<li><strong>动态收集</strong>：利用模糊测试的覆盖率反馈（如AFL的位图）识别PE。位图被划分为四个区域，其中Region I（0x0000-0x3FFF）存储确定的前驱边，Region II（0x4000-0x7FFF）为待迁移候选区。</li>
+</ul>
+<ol start="2">
+<li>前驱驱动覆盖率跟踪（Predecessor-driven Coverage Tracing）</li>
+</ol>
+<ul>
+<li>使用双二进制设计：<strong>执行器（executor）</strong> 进行正常模糊测试，<strong>导航器（navigator）</strong> 在发现新覆盖率（Region II）时通过软件中断（INT3）精确跟踪基本块位置。</li>
+<li>动态扩充前驱集：当执行器覆盖到新边（如间接调用引发的边）时，导航器将其标记为PBB，通过二进制重写更新ID，利用可达性的传递性传播前驱。</li>
+</ul>
+<ol start="3">
+<li>基于区域成熟度的模糊测试（Fuzzing based on Regional Maturity）</li>
+</ol>
+<ul>
+<li><strong>区域成熟度（Regional Maturity）</strong>：新适应度指标，定义为已覆盖前驱数与总前驱数的比率（M&#x3D;Ncov&#x2F;Ntotal），用于指导种子选择、功率调度和变异。</li>
+<li><strong>种子深度（Seed Depth）</strong>：种子执行路径中包含的前驱数量，优先选择高深度种子。</li>
+<li><strong>功率调度</strong>：结合模拟退火算法，分配更多能量给高成熟度种子（公式：<em>p</em>(<em>s</em>)&#x3D;exp(M⋅<em>d</em><del>(<em>s</em>)&#x2F;<em>T</em>exp)），其中 <em>d</em></del>(<em>s</em>) 为归一化种子深度。</li>
+<li><strong>种子选择与变异</strong>：过滤非前驱种子，对成熟种子（M⋅<em>d</em>~(<em>s</em>)&gt;<em>θ</em>）应用确定性变异算子。</li>
+</ul>
+<h1 id="AFGEN"><a href="#AFGEN" class="headerlink" title="AFGEN"></a>AFGEN</h1><p>2024 IEEE SP</p>
+<p>主要提出了一种名为“全函数模糊测试”的新方法</p>
+<ol>
+<li><p><strong>双向切片器（Bi-direction Slicer）</strong>：</p>
+<ul>
+<li><strong>功能</strong>：分析源代码，提取目标函数的调用语句及其<strong>数据流</strong>、<strong>控制流</strong>依赖代码片段。</li>
+<li><strong>算法</strong>：基于Clang&#x2F;LLVM的AST分析，定位调用者函数，切片关键代码（如循环、初始化语句），并优化删除无害代码（如调试输出）。</li>
+</ul>
+</li>
+<li><p><strong>变量值分配器（Variable Value Assigner）</strong>：</p>
+<ul>
+<li><p><strong>功能</strong>：为切片代码中未初始化的变量（如函数参数、全局变量）分配值，确保harness可编译执行。</p>
+<p>方法</p>
+<p>：根据变量类型采用不同策略（如表1所示）：</p>
+<ul>
+<li>基本类型（如整数）：直接从模糊输入数据赋值。</li>
+<li>指针&#x2F;数组：分配内存缓冲区并填充数据。</li>
+<li>复杂结构体：仅初始化被使用的成员，避免冗余。</li>
+</ul>
+</li>
+<li><p><strong>特殊处理</strong>：枚举类型从候选值中随机选择；函数指针通过源代码分析匹配。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>约束追踪器（Constraints Tracer）</strong>：</p>
+<ul>
+<li><strong>功能</strong>：根据初始harness的崩溃报告，反向追踪约束条件（如变量依赖），并添加到harness中以减少误报。</li>
+<li><strong>算法</strong>：基于LLVM IR分析崩溃点的变量定义和使用链，提取约束语句（如条件判断）。例如，对崩溃相关变量模式检查，添加宏定义约束。</li>
+</ul>
+</li>
+</ol>
+<p>AFGEN的集成流程：预处理源代码收集信息（如函数依赖、结构定义）→ 切片 → 分配值 → 生成harness → 模糊测试 → 追踪约束 → 优化harness。最终harness可直接调用目标函数，并通过libFuzzer执行。</p>
+<h1 id="Halo"><a href="#Halo" class="headerlink" title="Halo"></a>Halo</h1><p>通过动态推断“可能不变量”（likely invariants）来约束输入生成空间，从而高效生成更多可达输入（reachable inputs）</p>
+<p>关注的约束包括：初始模板不变量包括常量检验、涉及单变量的下界检验以及多变量之间相互依赖的线性不等式</p>
+<p>主要包括三个阶段：</p>
+<ol>
+<li><strong>动态可能不变量推断</strong></li>
+</ol>
+<ul>
+<li><strong>直觉</strong>：路径条件可视为输入字节间的关系不变量（如线性不等式）。Halo从可达和不可达输入中分别推断不变量集合 <em>I</em>reach 和 <em>I</em>unreach。</li>
+<li><strong>技术基础</strong>：基于动态不变量推断引擎（如DIG），仅分析输入字节的关系（如常量、边界、线性依赖），避免符号执行的开销。</li>
+</ul>
+<ol start="2">
+<li><strong>高效不变量推断：基于距离的输入选择</strong></li>
+</ol>
+<ul>
+<li><strong>挑战</strong>：输入数量爆炸可能拖慢推断效率。</li>
+<li><strong>解决方案</strong>：仅选择靠近条件边界的代表性输入（小|f(x)|值）。通过<strong>污点分析</strong>识别影响目标的输入字节，计算其与边界距离（如分支条件值的和）。</li>
+<li><strong>示例</strong>：输入E(6,100,12)距离边界较远（|f(E)|&#x3D;112），被排除在推断样本外。</li>
+<li><strong>样本数量</strong>：基于统计学理论，使用385个输入即可在95%置信水平下近似分布。</li>
+</ul>
+<ol start="3">
+<li><strong>有效输入生成：基于相似性的不变量选择</strong></li>
+</ol>
+<ul>
+<li><strong>挑战</strong>：推断的不变量可能不精确或过度约束。</li>
+<li><strong>解决方案</strong>：根据不变量生成输入的可达比例（相似性）动态优先级。相似性高的不变量被优先用于采样（如Vaidya Walk算法）。</li>
+<li><strong>自适应优化</strong>：若所有不变量效果不佳，收集反例重新推断。</li>
+</ul>
+<h1 id="Angora"><a href="#Angora" class="headerlink" title="Angora"></a>Angora</h1><p>核心目标是通过<strong>无需符号执行的方法解决路径约束</strong></p>
+<p>上下文敏感的分支计数（Context-Sensitive Branch Count）</p>
+<ul>
+<li><strong>问题</strong>：AFL使用上下文不敏感的分支计数（仅记录基本块前后的分支），无法区分同一分支在不同调用上下文中的行为，导致漏报。</li>
+<li><strong>解决方案</strong>：Angora将分支定义为三元组 <code>(l_prev, l_cur, context)</code>，其中 <code>context</code> 是调用栈的哈希值。例如，递归函数中同一分支在不同栈上下文下被视为不同分支。</li>
+<li><strong>效果</strong>：显著提高状态探索能力。在真实程序中，分支数量平均增加3-8倍（见表7），覆盖率提升高达29.9%（如file程序）。</li>
+</ul>
+<p>可扩展的字节级污点跟踪（Scalable Byte-Level Taint Tracking）</p>
+<ul>
+<li><p><strong>目的</strong>：确定影响条件语句谓词的输入字节，仅突变这些字节以减少搜索空间。</p>
+</li>
+<li><p>技术挑战</p>
+<p>：污点标签的内存开销大。Angora设计了一种</p>
+<p>基于树的高效数据结构</p>
+<p>：</p>
+<ul>
+<li>将污点标签存储为树节点，通过算法优化插入（INSERT）、查找（FIND）和合并（UNION）操作。</li>
+<li>空间复杂度从O(nl)降至O(l·logl)，其中l为标签数量。</li>
+</ul>
+</li>
+<li><p><strong>优化</strong>：污点跟踪仅对种子输入运行一次，后续突变无需重复，分摊开销（执行速度与AFL相近，见表10）。</p>
+</li>
+</ul>
+<p>基于梯度下降的搜索算法（Gradient Descent-Based Search）</p>
+<p>- </p>
+<p>  创新点</p>
+<p>  ：将路径约束转化为黑盒函数f(x)的优化问题，使用梯度下降求解：</p>
+<ul>
+<li><p>约束类型包括f(x)&lt;0、f(x)&lt;&#x3D;0、f(x)&#x3D;&#x3D;0（通过表2转换比较操作）。</p>
+</li>
+<li><p>通过数值近似计算梯度：∂f&#x2F;∂x_i ≈ [f(x+δv_i) - f(x)] &#x2F; δ。</p>
+</li>
+<li><p><strong>优势</strong>：可处理符号执行难以解决的复杂约束（如单调函数），求解效率比随机突变和魔法字节策略高20-30%（见表8）。</p>
+</li>
+</ul>
+<p>3.4 类型与形状推断（Type and Shape Inference）</p>
+<ul>
+<li><strong>问题</strong>：输入中多个字节可能被程序作为单个值（如4字节整数）使用，若单独突变会导致梯度计算不准确。</li>
+<li><strong>解决方案</strong>：动态污点分析中推断字节的组合方式（形状）和类型（如符号整数）。例如，连续4字节被读取为整数时，Angora将其视为单一变量进行梯度下降。</li>
+</ul>
+<p> 输入长度探索（Input Length Exploration）</p>
+<ul>
+<li><strong>策略</strong>：仅当路径约束依赖输入长度时延长输入（如检测到read函数返回值影响分支）。</li>
+<li><strong>对比</strong>：AFL等工具随机延长输入，效率低。Angora将延长次数降低两个数量级，且生成的平均输入长度更短（见表9），减少冗余测试。</li>
+</ul>
+<p>实现细节</p>
+<ul>
+<li><strong>插桩</strong>：基于LLVM 4.0.0实现，扩展DataFlowSanitizer（DFSan）支持污点跟踪。插桩代码820行C++，运行时1950行C++。</li>
+<li><strong>模糊器</strong>：用Rust实现（4488行），支持fork服务器和CPU绑定优化。</li>
+<li><strong>处理复杂语句</strong>：将switch语句转换为if序列，并识别libc函数（如strcmp）以优化约束求解。</li>
+</ul>
+<h1 id="EcoFuzz"><a href="#EcoFuzz" class="headerlink" title="EcoFuzz"></a>EcoFuzz</h1><p>2020 USENIX</p>
+<p>论文提出将CGF过程建模为<strong>对抗性多臂老虎机问题的变体（VAMAB）</strong>，以更深刻地描述种子调度中的“探索-利用”权衡问题：</p>
+<ol>
+<li><p><strong>将种子视为“老虎机”</strong>：每个种子对应一个臂，拉动臂（即模糊测试该种子）可能获得“奖励”（即发现新路径）。</p>
+</li>
+<li><p><strong>奖励概率定义</strong>：种子 <em>t**i</em> 的奖励概率 <em>P<strong>R</strong>i</em>,<em>n</em> 表示其能够发现新路径的概率，该概率随已发现路径数量增加而衰减。</p>
+</li>
+<li><p>三状态分类</p>
+<p>：</p>
+<ul>
+<li><strong>初始状态</strong>：所有种子尚未被测试；</li>
+<li><strong>探索状态</strong>：部分种子已被测试，需继续测试未测试种子以估计其奖励概率；</li>
+<li><strong>利用状态</strong>：所有种子已被测试，应优先选择奖励概率高的种子进行测试</li>
+</ul>
+</li>
+</ol>
+<p>基于VAMAB模型，论文提出两种核心算法并实现于工具<strong>EcoFuzz</strong>：</p>
+<ol>
+<li><strong>自转移概率估计方法（SPEM）</strong></li>
+</ol>
+<ul>
+<li>通过种子自转移频率 <em>f**ii</em> 和种子索引估算奖励概率：<em>P<strong>R</strong>i</em>,<em>n</em>≈1−<em>i<strong>f</strong>ii</em></li>
+<li>优先选择自转移频率低、索引大的种子，以提高发现新路径的概率。</li>
+</ul>
+<ol start="2">
+<li><strong>自适应平均成本能量调度（AAPS）</strong></li>
+</ol>
+<ul>
+<li>定义<strong>平均成本</strong> <em>C</em>&#x3D;发现路径数总执行次数 作为能量分配基线；</li>
+<li>根据种子执行路径的频率动态调整能量分配系数；</li>
+<li>引入<strong>后悔机制</strong>（regret）自适应调整下一次能量分配，避免过度分配</li>
+</ul>
+<h1 id="FAIRFuzz"><a href="#FAIRFuzz" class="headerlink" title="FAIRFuzz"></a>FAIRFuzz</h1><p>FAIRFuzz采用两步策略，无缝集成于AFL框架中：</p>
+<p>1. </p>
+<p>   识别稀有分支</p>
+<ul>
+<li>动态统计每个分支被历史输入命中的次数（hit count）。</li>
+<li>定义“稀有分支”为命中次数低于动态阈值（如最小命中次数的2的幂）的分支。这些分支通常保护未被充分探索的代码区域。</li>
+</ul>
+<p>2. </p>
+<p>   突变掩码技术</p>
+<ul>
+<li>对命中稀有分支的输入，计算突变掩码（mutation mask），标识输入中可安全突变的字节位置。</li>
+<li>掩码通过实验性突变（如翻转、插入、删除字节）确定：若突变后输入仍命中目标分支，则允许<strong>该类突变</strong>。</li>
+<li>在确定性突变和 havoc 突变阶段，仅允许在掩码标记的位置进行突变，避免破坏关键字节。</li>
+</ul>
+<p>该方法轻量级，无需额外程序插桩，保留了AFL的易用性。算法2（论文中）详细描述了FAIRFuzz的集成流程，包括输入选择、掩码计算和偏置突变。</p>
+<h1 id="profuzz"><a href="#profuzz" class="headerlink" title="profuzz"></a>profuzz</h1>
                 
               </div>
             
@@ -291,6 +553,34 @@
             <div>
               <div class="post-metas my-3">
   
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/fuzz/" class="category-chain-item">fuzz</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/fuzz/" class="print-no-link">#fuzz</a>
+      
+    </div>
   
 </div>
 
@@ -360,6 +650,52 @@
 
 <div class="category-list">
   
+  
+    
+    
+    
+    <div class="category row nomargin-x">
+      <a class="category-item 
+          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="fuzz"
+        id="heading-887175e515cd3b479f6ae6fb1a76138e" role="tab" data-toggle="collapse" href="#collapse-887175e515cd3b479f6ae6fb1a76138e"
+        aria-expanded="true"
+      >
+        fuzz
+        <span class="list-group-count">(2)</span>
+        <i class="iconfont icon-arrowright"></i>
+      </a>
+      
+      <div class="category-collapse collapse show" id="collapse-887175e515cd3b479f6ae6fb1a76138e"
+           role="tabpanel" aria-labelledby="heading-887175e515cd3b479f6ae6fb1a76138e">
+        
+        
+          
+  <div class="category-post-list">
+    
+    
+      
+      
+        <a href="/2025/12/17/Darwin%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" title="Darwin源码分析"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Darwin源码分析</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2025/09/07/Direct-Fuzz-Review/" title="Direct-Fuzz-Review"
+           class="list-group-item list-group-item-action
+           active">
+          <span class="category-post">Direct-Fuzz-Review</span>
+        </a>
+      
+    
+  </div>
+
+        
+      </div>
+    </div>
   
 </div>
 

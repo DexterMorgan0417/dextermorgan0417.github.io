@@ -1,0 +1,831 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN,en,default" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/head.jpg">
+  <link rel="icon" href="/img/head.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Dexter Morgan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="DGF的定义和需求原因DGF(Directed Gery-box Fuzzing) 定向灰盒模糊测试,相比于传统模糊测试,集中资源进行探测给定的程序位置,为目标漏洞是否完整修复,和验证静态分析报告等需要有重要作用 目标选取为解决多个不同测试目标重复测试带来 的资源消耗大的问题,还需要有效划分多个测试目标及其关联性 预处理如何对被测程序执行路径和测试目标之间的关 系进行有效的度量,减少测试时在不相关">
+<meta property="og:type" content="article">
+<meta property="og:title" content="定向灰盒模糊测试技术研究进展">
+<meta property="og:url" content="https://dextermorgan0417.github.io/2026/01/06/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/index.html">
+<meta property="og:site_name" content="Dexter">
+<meta property="og:description" content="DGF的定义和需求原因DGF(Directed Gery-box Fuzzing) 定向灰盒模糊测试,相比于传统模糊测试,集中资源进行探测给定的程序位置,为目标漏洞是否完整修复,和验证静态分析报告等需要有重要作用 目标选取为解决多个不同测试目标重复测试带来 的资源消耗大的问题,还需要有效划分多个测试目标及其关联性 预处理如何对被测程序执行路径和测试目标之间的关 系进行有效的度量,减少测试时在不相关">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://dextermorgan0417.github.io/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260107204007314.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260107204134498.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260108160702558.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260108161703041.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260108155919380.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260108202208665.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260108202556335.png">
+<meta property="og:image" content="https://dextermorgan0417.github.io/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260108202604285.png">
+<meta property="article:published_time" content="2026-01-06T08:19:31.000Z">
+<meta property="article:modified_time" content="2026-01-08T12:45:28.327Z">
+<meta property="article:author" content="Dexter Morgan">
+<meta property="article:tag" content="DGF">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dextermorgan0417.github.io/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260107204007314.png">
+  
+  
+  
+  <title>定向灰盒模糊测试技术研究进展 - Dexter</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"dextermorgan0417.github.io","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"left","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":1},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 50vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Dexter</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/directory/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>目录索引</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/gamersky_01origin_01_20168131952B9E.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="定向灰盒模糊测试技术研究进展"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-01-06 16:19" pubdate>
+          2026年1月6日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          11k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          95 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="padding-left: 2rem; margin-right: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">定向灰盒模糊测试技术研究进展</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="DGF的定义和需求原因"><a href="#DGF的定义和需求原因" class="headerlink" title="DGF的定义和需求原因"></a>DGF的定义和需求原因</h1><p>DGF(Directed Gery-box Fuzzing) 定向灰盒模糊测试,相比于传统模糊测试,集中资源进行探测给定的程序位置,为目标漏洞是否完整修复,和验证静态分析报告等需要有重要作用</p>
+<h2 id="目标选取"><a href="#目标选取" class="headerlink" title="目标选取"></a>目标选取</h2><p>为解决多个不同测试目标重复测试带来 的资源消耗大的问题,还需要有效划分多个测试目标及其关联性</p>
+<h2 id="预处理"><a href="#预处理" class="headerlink" title="预处理"></a>预处理</h2><p>如何对被测程序执行路径和测试目标之间的关 系进行有效的度量,减少测试时在不相关路径 上的探索,实现向目标更快靠近.,或者实现依赖特定序列的漏洞目标定向.</p>
+<h2 id="性能"><a href="#性能" class="headerlink" title="性能"></a>性能</h2><p>现有覆盖率引 导的方法缺乏对触发目标崩溃能力的反馈,难以有效提升测试的定向能力.</p>
+<h1 id="技术概述"><a href="#技术概述" class="headerlink" title="技术概述"></a>技术概述</h1><p>DGF[35]是一种结合目标导向搜索和灰盒测试 特性的模糊测试技术,旨在通过引导测试输入生成 过程,使其快速聚焦于特定的目标区域(如潜在漏 洞、特定代码片段或关键路径)</p>
+<p>将DGF的执行过程归纳为3个主要阶段:测试目标 选取、定向预处理及定向模糊测试循环</p>
+<h2 id="测试目标选取"><a href="#测试目标选取" class="headerlink" title="测试目标选取"></a>测试目标选取</h2><p>分为手动设置目标和自动生成,自动一般依赖静态分析工具的结果</p>
+<h2 id="定向预处理"><a href="#定向预处理" class="headerlink" title="定向预处理"></a>定向预处理</h2><p>定向预处理过程主要通过静 态分析等程序分析技术,生成测试对象程序调用图 等关键信息。利用这些信息设计目标相关的有效度量方法,主要有基于距离最小化的方法、基于输 入可达性的方法和基于序列导向的方法。 DGF在编译阶段进行度量相关的插桩,以便在定向 模糊测试的过程中实时监测程序执行情况。编译后 生成的二进制文件作为模糊测试循环的输入</p>
+<h2 id="模糊测试循环"><a href="#模糊测试循环" class="headerlink" title="模糊测试循环"></a>模糊测试循环</h2><p>相比传统模糊测试主要包含能量调度、种子突变和种子优先级排序这3个核心模块.核心要点就是加速找到到达目标位置的测试用例</p>
+<h1 id="应用现状及挑战"><a href="#应用现状及挑战" class="headerlink" title="应用现状及挑战"></a>应用现状及挑战</h1><p>验证静态分析工具生成的报告,由于静态分析的高误报率,人工验证费时费力</p>
+<p>软件补丁的回归测试,确保补丁的完整补全性(修复原来漏洞且不引入新漏洞)</p>
+<p>崩溃重现,单个poc或者崩溃转储只代表一个具体的执行序列和路径,修复此漏洞不一定被完整修复(其他路径&#x2F;相关代码)</p>
+<p>问题:</p>
+<ol>
+<li>如何从公开漏洞报告找出目标位置</li>
+<li>多目标下如何区分关联,避免<strong>退化</strong></li>
+<li>预处理时如何精确度量与目标的”距离”,精确引导测试到目标位置上</li>
+</ol>
+<p>我们对DGF测试循环的性能做一个形式化的分析 -&gt;  性能x&#x3D;1&#x2F;(当前所有最佳种子与所有目标的调和距离)*(已经执行的次数|执行的时间)</p>
+<h1 id="测试目标选取-1"><a href="#测试目标选取-1" class="headerlink" title="测试目标选取"></a>测试目标选取</h1><h2 id="手动选取"><a href="#手动选取" class="headerlink" title="手动选取"></a>手动选取</h2><p>在已知目标漏洞信息的情况下,或者得到目标崩溃信息</p>
+<h2 id="自动生成"><a href="#自动生成" class="headerlink" title="自动生成"></a>自动生成</h2><p>自动生成目标的方法依靠自动化工具,例 如,使用Sanitizer[98-99]等自动化工具在代码执行时 实时检测并记录各种运行时错误,如内存泄漏、缓冲 区溢出等;或使用深度学习模型对可能存在问题的 目标进行预测</p>
+<p>Parme San[58]和 FishFuzz[59]使用了Sanitizer检测出的潜 在缺陷作为测试目标</p>
+<p>;DeFuzz[100]构建了深度学习预测模型,识别潜在 的易受攻击的位置作为测试目标。通过训练模型识 别代码中的模式和特征,预测高风险区域并进行定 向模糊测试</p>
+<h2 id="多目标优化方法"><a href="#多目标优化方法" class="headerlink" title="多目标优化方法"></a>多目标优化方法</h2><p>一个选择是多次对单个目标进行并发模糊测试,。然而,这对开发人员来说可能不 切实际(???)</p>
+<p>现有大多数不支持同时测试多个目标.它们的成功取决于设计更精确 地分析单个目标的细粒度反馈</p>
+<p>当前定向灰盒模糊器在同时分析程 序中的多个目标时经常面临可扩展性的问题,从而 可能退化为目标无向方法</p>
+<p>Huang等人[49]在 Mag ma数据集[103]中对AFLGo的多目标检测能力进行 了测试,AFLGo在使用多目标模糊测试重现相同 数量目标时,与使用多个并行模糊器实例分别测试 单个目标相比,重现崩溃所需的时间增加了3.2倍。</p>
+<p>针对一般反馈的效率问题,目前在多目标优化 方向上的研究工作主要包括以下2类</p>
+<p>增强种子与多目标相关性的方法:</p>
+<p>通过分析种子与测试目标之间的关系,优化种子 选择和资源分配,以在多目标测试中提高测试效率 和目标覆盖率</p>
+<p>Titan设计了一种 前提条件推断分析方法,使用静态分析推断出每个 测试目标的前提条件,并基于路径条件计算各个目 标之间的相关性。Titan将程序目标之间的相关性 细分为3种类型:条件重叠、条件冲突和条件独立</p>
+<p>Titan在条件重叠 条件下,识别可能同时触及多个目标的种子,并优先 调度;在条件冲突条件下,区分并独立处理这些冲突 条件;在独立条件下,专注于改变不会影响触发其他 目标的独立字节,从而减少种子为覆盖多个目标而 产生的额外执行次数</p>
+<p>LeoFuzz ,侧重于种子与已知目标之间的相关性。它提出 了自适应调整探索(Exploration)和利用(Exploita tion)阶段的方法.,设计了2个队列,分别存储有助 于达到目标的种子和增加代码覆盖的种子,根据覆 盖种子的比例和代码覆盖的信息量来动态调整探索 与利用阶段的转换.同时,设计了一种多目标能量 调度策略,通过考虑种子与多个目标序列之间的<strong>关 系</strong>,包括种子的序列覆盖率、目标序列的优先级和目 标序列的全局最大覆盖率,实现细化能量分配</p>
+<p>Pro spector[68]则提出了一种专注于“聚焦目标”的多目 标DGF方法,通过Sanitizer构建测试目标,并结合 静态和动态优先级分析对多个目标进行排序。静态 优先级通过Louvain算法[104]对函数调用图进行划 分,结合目标密度、函数中心性和目标关联性,筛选 可能更易触发漏洞的目标。动态优先级根据路径覆 盖率和资源分配实时调整“聚焦目标”。在此基础 上,通过探索与利用阶段的调度,优化种子选择和字 节突变策略,优先测试与目标更相关的种子和字节</p>
+<p>提高单次执行的多目标覆盖能力:</p>
+<p>使得每次执行尽可 能地覆盖更多的目标</p>
+<p>。AFLRUN[69]主要通过目标 路径多样性度量和无偏能量分配策略来优化测试过 程。它维护了每个目标的覆盖状态图,并通过额外 的映射来评估种子在不同目标上的多样化能力。无 偏能量分配确保每个目标都能被公平测试</p>
+<p>,WAFLGO[70]采用了一种专注于检测代 码提交(commit)引入的潜在漏洞的方法。它通过 识别路径前缀代码(Path-prefixCode)和数据后缀 代码(Data-suffixCode),利用这些关键代码引导输 入生成到达代码变更的位置,并进一步增加输入的 多样性。它的优势在于其轻量级的多目标距离度量 和无偏能量分配策略,通过合并同一函数中的变更 点为整体目标,并计算每个目标块的距离,以确保每 个目标都得到平等处理</p>
+<p>;SA Fuzz[71]则通过静态分析设计目标定向基本块,优先 测试关键路径节点。结合动态目标覆盖反馈和自适 应能量调度,确保测试资源集中于未覆盖或难以触 发的目标。该方法还采用了分支敏感突变[105]和多 臂老虎机模型[106]优化突变策略</p>
+<p>,Par meSan[58]和FishFuzz[59]采用了Sanitizer引导的模 糊测试策略。其中,ParmeSan通过在目标程序的 中间表示上进行Sanitizer插桩,能够更精准地检测 内存错误和未定义行为。它通过启发式剪枝减少测 试目标的数量,特别是对复杂函数和程序热路径的 优先测试,来提高测试效率;FishFuzz则进一步优 化了多目标模糊测试的策略,设计了一种多目标距 离度量算法来计算每个种子与目标之间的独立距 离</p>
+<p>总体来看,这些方法各有侧重,AFLRUN强调 路径多样性和公平能量分配,WAFLGO注重代码 变更影响和关键代码引导,SAFuzz专注目标覆盖 与突变优化策略;ParmeSan和FishFuzz聚焦于 Sanitizer驱动的精确测试,FishFuzz进一步通过多 距离度量和优先级动态调整优化目标覆盖</p>
+<p><img src="/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260107204007314.png" srcset="/img/loading.gif" lazyload alt="image-20260107204007314"></p>
+<p><img src="/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260107204134498.png" srcset="/img/loading.gif" lazyload alt="image-20260107204134498"></p>
+<h1 id="预处理-1"><a href="#预处理-1" class="headerlink" title="预处理"></a>预处理</h1><p>,大 多DGF工作在动态分析的同时,使用了静态分析来 提取必要的信息,以指导测试的定向执行。这些工作 通常会使用静态分析所得到的程序调用图、控制流 图、数据流图等作为辅助,引导模糊器逐步向目标位 置靠近。通过动态分析和静态分析相结合的方式,不 仅可以更精确地识别并触发软件中的关键部分,还可 以生成更有针对性的输入来提高测试用例的有效 性,提升模糊器对特定目标的测试效率。</p>
+<h2 id="基于距离最小化的方法"><a href="#基于距离最小化的方法" class="headerlink" title="基于距离最小化的方法"></a>基于距离最小化的方法</h2><p>,研究人员 往往会使用控制流等信息定义距离算法,综合考虑 路径长度、分支条件、特定函数调用等因素,定义一 种量化种子与测试目标之间接近程度的度量,评估 种子抵达目标的能力</p>
+<p>AFLGo[35]是第一个提出DGF概念的工作.,使用了静态分析技术, 采用了启发式方法提升执行轨迹和测试目标之间距 离较短的种子的利用率。通过构建程序调用图和过 程间控制流图ICFG,计算程序中函数间距离和基 本块间距离。其中,函数间距离使用调和平均数距 离,区分在多目标场景下的不同目标的距离度量。 基本块间的距离使用Dijkstra最短路径算法[112]定 义种子与目标的距离。然后,对函数间的距离和基 本块间的距离进行归一化处理得到种子的最终距 离。每次优先使用平均距离最小的种子优先执行, 以实现对目标的定向能力</p>
+<p>,后续出现 了一系列改进工作,主要包括以下3类</p>
+<p>增强目标定向能力的距离度量算法:</p>
+<p>,Hawkeye改 进了ICFG的构建精度,利用包含关系的指针分 析[113]来识别间接调用,生成更精细的控制流图</p>
+<p>;WindRanger侧重于 基本块的偏差分析,针对AFLGo仅使用控制流信 息进行距离计算的局限性,该方法结合数据流分析, 识别执行过程中可能偏离目标的偏差基本块。它通 过静态分析和污点分析,确定哪些字节会影响给定 分支约束的数据流信息</p>
+<p>DAFL则采用基于定义使用图的语义性评分算法, 进一步提升了种子与目标之间距离计算的精度,在 处理复杂结构的程序时表现出色</p>
+<p>;HyperGo在AFLGo距离度量的基础 上,引入了路径概率,动态评估路径到达目标的可能 性。该方法根据路径中分支命中的统计概率计算路 径到达目标的可能性,并将其与基本块距离结合,形 成概率基础距离。将更多资源分配给路径复杂度更 低(路径约束更少)</p>
+<p>支持多目标同时处理能力的距离度量算法:</p>
+<p>ParmeSan通过运行时Sanitizer插入的检查来识别 潜在漏洞作为测试目标,结合动态控制流图和数据 流分析,实时调整种子与目标的距离计算,以适应程 序行为的变化。该方法通过递归计算每个基本块到 不同目标的距离,并根据路径的条件分支数量进行 权重分配,实现了精确的多目标距离度量</p>
+<p>;FishFuzz 同样使用Sanitizer来生成测试目标,但其创新在于 提出了一种多距离度量算法,计算种子与每个目标 之间的独立距离,并通过动态调整目标优先级,减少 对已触发目标的种子的关注,优先测试尚未触发的 目标</p>
+<p>WAFLGO则针对代码提交可能引入的漏洞,提出 了一种多目标距离度量算法。通过构建支配树将同 一函数内的多个变更位置合并为一个目标节点,简 化了目标管理,并使用基本块间的最短路径计算合 并目标的距离</p>
+<h2 id="基于序列导向的方法"><a href="#基于序列导向的方法" class="headerlink" title="基于序列导向的方法"></a>基于序列导向的方法</h2><p>尽管DGF在一些场景下表现优异,但其在处理 特定触发序列的漏洞时仍然存在不足,如释放后使 用(Use-After-Free,UAF)、双重释放(double  free) 等依赖特定操作顺序的漏洞,仅仅到达目标位置并 不能保证漏洞的触发,而是需要满足一定的执行序 列。</p>
+<p>,一些研究工作采用序列导向的策略来增强模糊 器对漏洞触发能力。通过分析测试目标类型及其相 关数据条件,并将它们整合为序列化的约束,以序列 导向的方式引导模糊器的执行</p>
+<p>专门针对UAF漏洞进行有效检测:</p>
+<p>分析内存操作序列和类型状态,以提升AF漏洞的检测效</p>
+<p>。UAFUZZ[53]作为首个专门 用于检测UAF漏洞的定向灰盒模糊器,通过动态 监控程序的内存分配、释放和使用操作,生成内存事 件序列,并将这些序列与已知的UAF漏洞模式进 行比对,生成针对性的测试输入。它还采用序列相 似度评估机制,优先选择与已知UAF序列高度匹 配的种子进行测试</p>
+<p>,UAFL[84]采用类型状态分析作为主导, 关注于追踪程序中的内存操作序列(malloc-&gt;free-&gt;use),以此为基础来生成能够触发UAF漏洞 的测试用例。该方法利用类型状态分析(typestate  analysis)来识别可能违反类型状态属性的操作序 列,通过追踪在程序执行过程中状态的变化,构建映 射对象状态转换模型</p>
+<p><img src="/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260108160702558.png" srcset="/img/loading.gif" lazyload alt="image-20260108160702558"></p>
+<p>;MDFuzz[85]则采用多层次的处 理方法,通过静态分析识别内存操作的关键位置,并 计算各基本块到这些目标的距离,结合概率权重的 种子选择策略,动态调整测试过程中的种子选择和 突变</p>
+<p>仅关注与测试目标相关的执行序列,不区分 目标漏洞类型:</p>
+<p>。LOLLY[86]作为首个序列导向的灰盒模糊器, 通过插桩技术监控程序运行时的目标基本块覆盖情 况,利用共享内存记录执行轨迹,并根据种子的序列 覆盖率动态分配能量</p>
+<p>,Berry[52]进一步提出了一种更细致的序列导 向方法。该方法通过构建控制流图和支配树,扩展 了原有的目标序列,称为增强目标序列(Enhanced TargetSequence,ETS),确保了在到达目标序列的 任何一点之前,必须先访问这些节点</p>
+<p>LTL-Fuzzer[87]采用线性时序逻辑(Linear-time TemporalLogic,LTL)来引导输入生成,通过比对 程序行为和预定义的时序逻辑约束,确保生成的输 入序列能够探索可能违反LTL属性的执行路径</p>
+<p>它利用Büchi自动机[120]监测程序状态和事件序列, 不仅能发现简单的内存错误,还能揭示复杂的基于 事件顺序的漏洞</p>
+<p>;DeepGo[88]则通过结合历史路径 信息和深度学习模型,设计了序列化导向的方法,预 测未来的路径转换,以优化路径选择.,该方法设计了 一种虚拟集成环境(VirtualEnsembleEnviron ment,VEE),利用深度神经网络模拟和预测路径转 换过程。该方法还通过强化学习的方法,进一步开 发了一种针对模糊测试的强化学习模型,根据历史 和预测的路径转换信息,生成具有更高序列奖励的路 径转换序列</p>
+<p>SD FUZZ[89]提出了一种基于目标状态驱动的方法,利用 崩溃转储和SVF工具[121]的静态分析的结果提取漏 洞触发的特定执行序列。它通过双维度反馈机制(目 标状态反馈和改进的距离度量反馈),评估当前测试 用例与目标状态的相似性和函数调用的可能性,主动 引导测试朝着最有可能触发漏洞的方向进行</p>
+<p>以不同漏洞类型为导向:</p>
+<p>CAFL[90]提出了约束引导的方法,基 于漏洞类型的序列化对模糊器进行引导。该方法设 计了一种利用崩溃转储和补丁日志自动生成约束的 方法,生成具体的目标和其数据条件,形成一系列需 要满足的约束序列。通过上述的信息和静态分析的 结果,该方法提出了一种综合考虑控制流和数据流 信息的距离算法,使其有序且高效地触发目标漏洞, 其中,控制流信息体现种子与目标的接近程度,数据 流信息体现种子满足目标条件的能力。CAFL能够 检测包括use-after-free、double-free、use-of-unini tialized-value、 stack-buffer-overflow、heap-buffer-o verflow、assertion-fai lure以及divide-by-zero共7 种类型的错误。</p>
+<p><img src="/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260108161703041.png" srcset="/img/loading.gif" lazyload alt="image-20260108161703041"></p>
+<h2 id="基于输入可达性的方法"><a href="#基于输入可达性的方法" class="headerlink" title="基于输入可达性的方法"></a>基于输入可达性的方法</h2><p>但覆盖率引导的方式会导致 DGF运行过程中产生路径发散问题</p>
+<p>,目前在输入可达性方向上的研究工 作主要包括以下4类</p>
+<p>对输入的可达性进行分析预测:</p>
+<p>FuzzGuard[75]利用深度学习 技术来预测新生成输入的可达性,通过在执行目标 程序之前过滤掉目标不可达的输入</p>
+<p>它对每个测试项目训练专用模型,使用输入 执行后的可达性数据,并引入预主导节点来解决数 据不平衡问题。此外,该方法还设计了一种代表性 种子选择方法,最小化采样数据的数量</p>
+<p>;MC2[67]将模糊测试视为一个由预测 模型引导的搜索问题,通过预测模型提供的输入空 间信息来优化搜索策略,减少达到目标所需的输入 数量。它提出了一种随机化搜索算法,根据预测模 型的反馈动态调整搜索范围,以对数级查询复杂度 快速接近目标</p>
+<p>;Halo[76]则侧重于约束输入生成,推导出能到达目标的 不变条件,通过历史输入的分析,限制生成不可达的 输入</p>
+<p>对被测程序中目标无关的代码进行剪枝:</p>
+<p>针对现有的模糊器都存在路径爆炸的问题</p>
+<p>BEA CON[47]是首个在DGF的预处理阶段修剪不可达路 径的方法,通过静态分析程序的ICFG,删除无法到 达目标代码的基本块,并通过反向区间分析进一步 剔除更多不可达路径,专注于减少测试过程中不必 要的路径探索</p>
+<p>;SelectFuzz[77]进一步细化了剪枝方 法,将可达路径划分为目标相关路径和不相关路径, 对不相关路径进行细化修剪,作者经过统计分析发 现,87.67%可达路径实际上是目标不相关的。该方 法通过定义路径发散代码和数据依赖代码,使用新 的距离度量和反向数据流分析,精确识别和剔除与 目标无关的路径</p>
+<p>;TOPr[78]则针对一般剪枝方法无 法恢复间接控制流的问题,设计了增强目标导向的 剪枝策略,利用编译器提供的默认分析恢复所有直 接传输的控制流,无需额外的启发式加强。然后,通 过函数签名匹配,恢复和定位间接控制流,构建间接 调用关系。最后,对程序中所有相关基本块进行标 记,并对目标位置无关的基本块进行剪枝,避免对无 关路径的探索</p>
+<p>)通过有效的实时反馈减少对无关路径的探 索:</p>
+<p>SieveFuzz[51] 提出了一种基于“拌绳”(Tripwiring)的优化策略, 通过静态分析构建调用图和控制流图,识别所有潜 在的目标可达路径,并在不可达的代码区域设置拌 绳,以便实时终止不必要的测试。当新的可达路径 被发现时,拌绳机制能够动态调整,添加或移除拌 绳,使测试聚焦于相关路径</p>
+<p>;CONFF[79]采用了一种 基于动态约束过滤和聚焦的方法,通过追踪程序执 行中的所有路径约束,使用优先级系统筛选出最接近目标的关键约束</p>
+<p>;FGo[80]引入 了概率指数级止损策略,通过利用ICFG中的不可 达信息,动态调整测试用例的终止概率</p>
+<p>;PDGF[81]提出了一 种前驱感知的路径搜索方法,将DGF的问题重新定 义为在目标节点前驱区域内的路径探索。该方法通 过轻量级静态分析初步识别目标前驱区域,结合动 态执行中的覆盖追踪不断扩展前驱集合</p>
+<p>;DDGF[82]提出 了一种动态定向的路径探索方法,将DGF的问题重 新定义为基于路径频率分布的动态路径引导。通过 Ball-Larus路径分析算法[117]对路径进行高效编码, 结合实时路径频率分析,帮助用户识别和标记关键 路径。该方法利用轻量级动态路径分析实时显示路 径覆盖状态,并通过用户交互不断调整测试方向,使 得模糊测试器聚焦于目标区域内的漏洞触发路径</p>
+<p><img src="/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260108155919380.png" srcset="/img/loading.gif" lazyload alt="image-20260108155919380"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>(1)DGF的总目标是快速触发指定崩溃。基于 距离最小化和输入可达性的方法的目的都是为了快 速抵达目标,基于序列导向的方法目的是按特定的 执行序列触发指定崩溃。 (2)基于距离最小化的方法使用启发式的度量 方法,引导模糊器向目标靠近。主要思想是离目标 越近的执行,越有可能抵达并触发目标崩溃。 (3)基于输入可达性的方法对种子的可达性进 行了划分,优先执行更有机会抵达目标的输入。主 要思想是减少模糊测试中大量的目标无关输入,提 升输入的可达性。 (4)基于序列导向的方法对目标崩溃的执行序 列进行分析,引导模糊器按顺序执行序列并触发崩 溃。主要思想是使用目标相关的执行序列约束模糊 器,避免可达但不可触发的执行带来的时间和资源 损耗</p>
+<h1 id="性能优化"><a href="#性能优化" class="headerlink" title="性能优化"></a>性能优化</h1><p>在定向模糊测试循环的过程中,有3个核心模 块</p>
+<p>)能量调度。定向模糊测试循环中,会始终维 护着一个种子队列,每次选取队列的第一个种子进 行测试。能量调度算法决定了种子的突变次数,对 更有可能触发目标崩溃的种子给予更大的能量</p>
+<p>)种子突变。对于精心设计的被测程序,随机 输入的种子很难触发程序的崩溃。种子突变策略的 设计目标,是对未触发崩溃的种子进行改变(如字节 翻转、字节拼接等),试图更有效地触发目标崩溃</p>
+<p>)优先级队列排序。突变后的种子会被作为 测试用例执行程序,对于仍未触发目标崩溃的种子, 需要进入定向模糊测试循环进一步测试。优先级队 列通过评估种子触发崩溃的能力,将更优质的种子 赋予更高的优先级,在后续的过程中优先执行,提升 有效种子的利用率。</p>
+<h2 id="全局能量调度算法"><a href="#全局能量调度算法" class="headerlink" title="全局能量调度算法"></a>全局能量调度算法</h2><p>通常涵盖探索(Exploration)和 利用(Exploitation)两个阶段</p>
+<p>探索阶段:目的是广泛地搜索测试空间以发 现新的、未被探索的代码路径。在这一阶段,模糊器 会尽可能地生成多样化的输入数据,以覆盖尽可能 多的程序行为和状态。能量调度在此阶段会更加倾 向于均匀地分配资源给各种潜在的输入或种子,以 避免过早地聚焦于某些特定的路径或输入,从而错 过其他重要的测试区域。</p>
+<p>)利用阶段:一旦在探索阶段发现了值得进一 步探索的路径,模糊测试便进入利用阶段。在这一 阶段,能量调度的重点转变为深入挖掘已知的有潜 力路径,提升发现漏洞的能力。能量调度策略会倾 向于将更多的资源集中在那些已经显示出高潜力的 种子上,或是那些能触发罕见或复杂代码路径的种 子上</p>
+<p>在现有的DGF工作中,能量调度算法通常采用 动态调整机制,根据实时反馈调整资源分配策略。 全局能量调度算法的优化主要包括以下2类</p>
+<p>)对探索和利用阶段的能量分配进行灵活调 整。通过调整能量分配策略来优化探索和利用阶段 的测试效果,不同方法在能量分配的灵活性和优先 级上各有侧重</p>
+<p>AFLGo[35]引入了模拟退火算法 (SimulatedAnnealing,SA)[122]来优化种子的能量 分配</p>
+<p>GREYHOUND[91]采用成本函数和粒子群优化 (ParticleSwarmOptimization,PSO)策略,通过定 义多个成本函数(如漏洞发现数量、状态转换数、测 试迭代时间等)来引导能量分配</p>
+<p>;FishFuzz[59]则 引入多距离度量和动态目标排序策略,通过两种探 索方式在函数间和函数内最大化目标触发,在利用 阶段则根据目标的优先级来分配种子能量。与 GREYHOUND不同,FishFuzz侧重于对目标之间 的距离测量和动态排序来进行灵活调整,重点在于 最大化目标的覆盖和种子的有效利用</p>
+<p>;AFL RUN[69]更加注重平衡初期的能量分配,而不依赖 复杂的距离度量和排序策略。该方法提出的无偏能 量分配策略相对简单,为每个目标代码块分配相同 的初始权重,保证各目标在测试初期得到均等对待</p>
+<p>LeoFuzz[48]采用了一种自适应调整的能量分配 策略,包括探索与利用阶段的协调CEE(Coordinate ExplorationandExploitationstages)和多级能量调 度策略MES(MultipleEnergyScheduling)。</p>
+<p>;Prospector[68]在探索阶段通过静态和动态 目标优先级分析,优先选择离聚焦目标最近的种子</p>
+<p>;SAFuzz[71]在探索阶段侧重于 发现新路径和未覆盖目标,通过距离、目标定向基本 块的数量以及目标未覆盖程度动态分配能量,快速 接近更多目标。在利用阶段,注重对已覆盖目标路 径的深入挖掘,优先为触发目标的种子分配资源,并 结合目标覆盖反馈减少对已充分探索路径的能量 浪费</p>
+<p>根据种子的质量,定义种子的能量,决定哪 些种子应该更频繁地被突变</p>
+<p>。DAFL[60]和UAFL[84] 通过分析程序的静态特征来优化种子的能量分配</p>
+<p>UAFUZZ[53]和 Hawkeye[50]注重利用种子的执 行路径和相似性来动态调整能量分配。UAFUZZ 结合前缀目标相似性、种子到目标路径的距离和边 缘覆盖度量,综合评估种子的质量,并根据这些指标 灵活调整能量分配,以更有效地检测复杂的UAF 漏洞;Hawkeye则通过计算基本块距离和覆盖函数 相似度,优先给更接近目标的种子分配能量</p>
+<p>VCov[92]、ODDFUZZ[93]和 DirectFuzz[73]侧重 于基于距离和覆盖率的信息进行能量调度。VCov 动态分配资源,特别是当种子触发新的控制流覆盖 时,增加资源投入以进一步探索相关路径;ODD FUZZ结合种子距离和调用链覆盖率,利用AFLGo 的距离算法来靠近目标,同时优先处理覆盖更多分 支的种子,平衡了距离和覆盖之间的关系;Direct Fuzz通过评估输入与目标模块之间的层级和连接 距离来分配能量,同时采用随机输入调度机制避免 测试陷入局部最小值,确保测试过程的多样性和覆 盖广度。</p>
+<h2 id="启发式种子突变策略"><a href="#启发式种子突变策略" class="headerlink" title="启发式种子突变策略"></a>启发式种子突变策略</h2><p>具体来说,在模糊测试中常用的种子突变策略 主要包括以下6种方式[28]: (1)比特翻转(Bit-flips):改变输入数据的单个 比特,例如将0变为1或将1变为0。 (2)简单算数运算(Simplearithmetic):对输入 数据执行基本的算术运算,例如加减一定数值。 (3)覆盖(Over-writing):使用新的数据覆盖选 定的数据。 (4)插入(Inserting):在输入数据中加入新的字 节或数据块。 (5)删除(Deleting):删除输入数据中的一部分。 (6)拼接(Splice):将两个或多个种子输入数据合并或重组</p>
+<p>,本节对不同的启发 式种子突变策略分为以下3类</p>
+<p>对探索和利用阶段分别进行突变策略优化:</p>
+<p>,Hawkeye[50]提出了一种自 适应种子突变方法,根据测试阶段和种子特性灵活 选择粗粒度和细粒度突变策略。在探索阶段,该方 法使用粗粒度突变(如Mixedhavoc、Semanticmu tation和Splice),以便快速扩展搜索空间,让种子更 快靠近目标。在利用阶段,则采用细粒度突变(如 Bit&#x2F;byteFlippings和ArithmeticsonSomeBytes), 旨在微调种子以触发潜在的目标崩溃</p>
+<p>;WindRang er[54]在探索阶段标记所有与约束变量相关的输入 字节为高优先级,而在利用阶段,则专注于识别偏移 基本块约束变量相关的输入字节。无论在哪个阶 段,高优先级字节在随机突变期间都有更大的突变 机会。此外,该方法还特别处理连续输入字节的情 况,如果这些字节共享相同的值,它会尝试替换为约 束的其他比较操作数,以更有效地探索和开发目标 路径</p>
+<p>;SAFuzz[71]在探索阶段注重路径的广度,通过 分支敏感分析和多臂老虎机模型生成多样化的测试 用例以覆盖新路径。在利用阶段则聚焦路径深度, 优先突变关键字节以触发目标漏洞,并动态调整突 变操作以提升测试效率</p>
+<p>不区分执行阶段改进种子突变策略:</p>
+<p>一些 工作在探索和利用阶段使用统一的改进突变策略, 提升模糊测试效果。Titan[49]利用种子相关性来突 变种子中与不同目标间独立变量相关的多个字节, 基于推理的污染分析动态推断可能影响独立相关性 变量的输入字节[25,105,123],逐步改变这些字节,使模 糊器能以更少的突变接近更多目标</p>
+<p>;UAFL[84]则提 出了一种基于信息流的突变策略,通过分析每个输 入字节与程序变量间的信息流强度来确定其对程序 状态的影响,归一化计算各字节的突变概率,信息流 强度越高的字节变异频率越高,从而提高对关键区 域的测试覆盖率</p>
+<p>;CONFF[79]采用策略性变异方法, 确定路径约束与种子输入字节的映射关系后,快速满足路径约束。该方法将路径约束划分为双路径和 多路径约束,并根据数据条件类型(fixed-to-fixed、 fixed-to-mapped、mapped-to-mapped)应用相应的 突变策略,如直接复制、二进制枚举和单点变异,以 提高测试效率</p>
+<p>;Prospector[68]在探索和利用阶段,根 据种子每个字节触发新路径或到达目标的能力对字 节进行评分,并采用AFLChurn[124]的策略,优先突 变相关性较高的字节</p>
+<h2 id="多级优先级队列"><a href="#多级优先级队列" class="headerlink" title="多级优先级队列"></a>多级优先级队列</h2><p>模糊器经过种子突变后,会产生大量输入进入 程序执行阶段,根据执行的结果判断种子触发目标 崩溃的能力,如何有效地对这些种子进行队列排序 优化,是优先级队列的目标。优先级队列通常会考 虑多个因素,包括种子的历史行为、与测试目标的距 离、测试目标可达性等。通过这种方式,模糊器不仅 可以让具有高潜力的种子优先执行,还能有效地优 化测试过程,避免资源浪费在无效输入上</p>
+<p>使用两级优先级队列来提升有效种子的利 用率。WindRanger[54]通 过 对 每 个偏差基本块 (DBB)生成一个可以覆盖该DBB的种子列表,并根 据种子到DBB的距离对列表进行升序排序,将最优 的种子放入优先级较高的队列中,其余种子放入低 级队列,以确保最有可能触发新路径的种子优先被选 中;ODDFUZZ[93]采用类似的策略,将距离相同但覆 盖范围更广的种子放入高优先级队列,使得优质种子 在突变过程中被优先使用,从而提高测试效率</p>
+<p>FishFuzz[59]通过设计队列剔除算法,动态调整 目标的优先级,优先处理那些尚未被覆盖或探索较 少的目标。这个策略根据目标探索状态的实时分 析,动态调整测试资源分配,确保测试重点集中在最 有潜力触发新漏洞的区域;DirectFuzz[73]针对RTL 设计中的特定实例,改进了输入队列管理,创建了一 个额外的优先级队列来存储涉及多路选择信号的测 试输入。该方法优先从高优先级队列中选择输入, 以便更快地覆盖目标模块实例,只有在高优先级队 列为空时,才按照FIFO顺序使用常规队列中的 输入</p>
+<p>使用三级优先级队列来提升有效种子的利 用率。Hawkeye[50]根据种子的潜在价值和与目标 区域的相关性,优化种子的处理顺序和测试效率。 它将覆盖新轨迹、与目标种子相似度更大、或能覆盖 目标函数的种子放入一级队列,因为这些种子在突 变后最有可能触发目标崩溃。将没有这些特性但为 新生成的种子放入二级队列,突变后的原种子则被 放入三级队列;Berry[52]根据种子的相似度和覆盖 率进行分级,将相似度大于特定阈值且带来新覆盖 的种子放入一级队列,相似度大于阈值或带来新覆 盖的种子放入二级队列,其余的种子放入三级队列; UAFL[84]则根据种子的得分将其分类到不同的队 列中,覆盖更多目标UAF序列的种子被放入一级 队列,覆盖新的控制流边缘的种子被放入二级队列, 其余种子被放入三级队列;MDFuzz[85]引入了基于 概率的多级种子队列,针对UAF漏洞检测,优先选 择包含内存分配和释放操作的种子,并将其放入最 高级队列,覆盖内存分配的种子放入二级队列,其他 种子则放入最低级队列。该方法通过概率分配增加 高优先级队列的选择机会,同时确保低优先级队列 不会被完全忽视,以防止测试过程中的饥饿现象</p>
+<p><img src="/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260108202208665.png" srcset="/img/loading.gif" lazyload alt="image-20260108202208665"></p>
+<h1 id="测试对象获取"><a href="#测试对象获取" class="headerlink" title="测试对象获取"></a>测试对象获取</h1><p>从表7中可以看出,在现有的工作 中,GNU 的二进制工具集Binutils被选做测试对象 的次数最多,其次是Flash输出库LibMing。此外, 用于图形处理的JasPer、libpng、LibTIFF、libjpeg、 GIFLIB、ImageMagick,用于嵌入式系统和物联网 设备的轻量级  JavaScript 引擎MJS,用于程序压缩 和归档的lrzip,用于XML解析的libxml2、Xm lLINT,用于汇编的NASM,用于安全通信处理的 OpenSSL,也被常用于DGF的独立测试对象</p>
+<p><img src="/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260108202556335.png" srcset="/img/loading.gif" lazyload alt="image-20260108202556335"></p>
+<p><img src="/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/image-20260108202604285.png" srcset="/img/loading.gif" lazyload alt="image-20260108202604285"></p>
+<h1 id="未来研究展望"><a href="#未来研究展望" class="headerlink" title="未来研究展望"></a>未来研究展望</h1><p>DGF技术的推出,为具有特定目标模糊测试需 求的用户提供了有效的解决方案。本文从测试目标 选取、目标定向的预处理和定向模糊测试的性能优 化这3个方面,对DGF技术的研究现状进行了总结 和归纳。但是,如何从以下3个方面更有效地提升 DGF的能力,需要进一步的研究。 (1)测试目标的选取:如何选择合适的测试目标 是DGF相关研究要解决的首要问题。选择合适的 测试目标,对不同测试目标进行统一的处理,提升测 试效能,增强模糊器验证不同漏洞的能力,依然是 DGF技术应用研究的重要研究方向。具体的研究 方向包括:目标优先级的动态调整、多目标间的权衡 与并行测试机制等。 (2)目标定向的预处理方法:DGF区别于CGF 最显著的特点就是其定向探索的能力,如何实现对 测试目标有针对性的模糊测试进行探索,是DGF研 究中最核心的研究问题,也是后续研究中最关键的 研究方向。具体的研究方向包括:测试目标的静态 分析与特征提取、目标覆盖与探索反馈机制、路径约 束与目标引导策略优化等。 (3)定向模糊测试的性能优化:DGF的本质依 旧是模糊测试,所以实现更高效的模糊测试能力仍 是提升DGF能力的重要手段,如何对模糊测试中的流程进行更加适应性的改进,也将是后续研究中的 热点问题。具体的研究方向包括:动态能量分配机 制、高效种子突变策略优化、种子优先级的动态调 整等。</p>
+<p>(1)多类型崩溃探测 现有研究工作中,已有一些优质的工作[53,84-85] 聚焦于UAF类型的漏洞,进行了深入的研究与分 析。然而,DGF测试所选取的测试目标通常涉及多 种复杂的漏洞类型,单一的类型识别工作无法高效 适用于大规模测试。为了提高测试的全面性和实用 性,DGF的研究需要进一步扩展,以包括更广泛类 型的漏洞检测能力。例如,CAFL[90]支持了7种崩 溃类型,如UAF、double-free等,验证了多类型崩溃 探测的可行性与有效性。本文认为,DGF未来的研 究工作可以以单类型漏洞检测为基础,逐步迭代扩 展到多个类型崩溃的支持,以实现不同类型崩溃重 现的高效性,适应更广泛的漏洞检测需求。 (2)多指标模糊测试 大部分DGF的研究工作使用了测试目标的覆 盖程度来引导测试,但单一的覆盖率指标可能会遗 漏一些关键的非功能性问题,如内存使用和资源消 耗。这些非功能问题在实际应用中可能导致性能下 降或系统不稳定,严重时甚至可能引发系统崩溃。 因此,单一指标的测试策略往往不能全面反映软件 的实际运行状态和潜在风险。为了更全面地评估和 提升软件的质量,未来的DGF应该向多指标优化的 方向发展。不仅仅关注覆盖率这一单一指标,还可 以从路径的复杂度、响应时间、资源消耗等方面,进 行多维度的优化。如何做好多个指标之间的权衡, 也是未来的研究方向之一。 (3)多程序语言支持 现有研究工作中DGF主要针对的程序语言是 C&#x2F;C++,但是目前软件测试的需求越来越广泛,大 型项目中的开发会使用不同的程序语言,例如:Ja va、Python等语言会经常被同时使用。由于现有静 态分析技术准确性的限制,DGF难以直接同时应用 到不同的语言中,因此需要对现有的分析和测试方 法进行扩展和改进。为了适应多语言环境,DGF可 能需要引入更为灵活的静态分析框架,通过插件或 模块化的方式支持多种语言,使得不同语言之间的 集成和交互变得更加准确和高效。在多语言的软件</p>
+<p>(4)应用大模型增强DGF 现有的模糊测试技术在漏洞检测中仍存在一定 的局限性,例如对代码结构、逻辑和上下文缺乏深入 理解,导致在复杂漏洞的探索中效果不佳。为了解 决这些问题,近年来一些研究[129-134]开始探索利用 大语言模型(Large  Language  Model,  LLM)来提升 传统模糊测试的能力,这些研究工作利用LLM增 强了测试对象的边缘覆盖率、优化了种子突变策略, 生成了更高质量的种子,进而提升模糊测试的效能。 同时,LLM的强大语义理解能力同样可以应用于 DGF技术[135-136]。未来的研究方向之一,可以聚焦 于如何有效地利用LLM来增强DGF的效能,特别 是在提高漏洞检测率、减少误报和加速测试过程 方面。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/DGF/" class="category-chain-item">DGF</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/DGF/" class="print-no-link">#DGF</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>定向灰盒模糊测试技术研究进展</div>
+      <div>https://dextermorgan0417.github.io/2026/01/06/定向灰盒模糊测试技术研究进展/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Dexter Morgan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年1月6日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar category-bar" style="margin-left: -1rem">
+    
+
+
+
+
+
+<div class="category-list">
+  
+  
+    
+    
+    
+    <div class="category row nomargin-x">
+      <a class="category-item 
+          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="DGF"
+        id="heading-2844c0a9c2e4e62b98acee80f7433bf8" role="tab" data-toggle="collapse" href="#collapse-2844c0a9c2e4e62b98acee80f7433bf8"
+        aria-expanded="true"
+      >
+        DGF
+        <span class="list-group-count">(1)</span>
+        <i class="iconfont icon-arrowright"></i>
+      </a>
+      
+      <div class="category-collapse collapse show" id="collapse-2844c0a9c2e4e62b98acee80f7433bf8"
+           role="tabpanel" aria-labelledby="heading-2844c0a9c2e4e62b98acee80f7433bf8">
+        
+        
+          
+  <div class="category-post-list">
+    
+    
+      
+      
+        <a href="/2026/01/06/%E5%AE%9A%E5%90%91%E7%81%B0%E7%9B%92%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E6%8A%80%E6%9C%AF%E7%A0%94%E7%A9%B6%E8%BF%9B%E5%B1%95/" title="定向灰盒模糊测试技术研究进展"
+           class="list-group-item list-group-item-action
+           active">
+          <span class="category-post">定向灰盒模糊测试技术研究进展</span>
+        </a>
+      
+    
+  </div>
+
+        
+      </div>
+    </div>
+  
+</div>
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <span>Dexter</span></a> <span>Morgan</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

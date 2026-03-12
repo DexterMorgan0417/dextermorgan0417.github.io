@@ -26,7 +26,7 @@
 <meta property="og:image" content="https://dextermorgan0417.github.io/2025/06/17/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/WindRanger/image-20250916192430681.png">
 <meta property="og:image" content="https://dextermorgan0417.github.io/2025/06/17/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/WindRanger/image-20250916192610263.png">
 <meta property="article:published_time" content="2025-06-17T02:05:26.000Z">
-<meta property="article:modified_time" content="2025-09-23T13:40:10.248Z">
+<meta property="article:modified_time" content="2026-01-29T08:52:36.444Z">
 <meta property="article:author" content="Dexter Morgan">
 <meta property="article:tag" content="paper">
 <meta name="twitter:card" content="summary_large_image">
@@ -152,6 +152,18 @@
           
           
             <li class="nav-item">
+              <a class="nav-link" href="/directory/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>目录索引</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
               <a class="nav-link" href="/tags/" target="_self">
                 <i class="iconfont icon-tags-fill"></i>
                 <span>标签</span>
@@ -223,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.4k 字
+          6.6k 字
         
       </span>
     
@@ -234,7 +246,7 @@
         
         
         
-          54 分钟
+          56 分钟
         
       </span>
     
@@ -490,12 +502,30 @@
 <li>找出有意义的比较（整数 &gt;&#x3D;32位 或 小字符串比较），记录 operands 信息到 condition_info.txt；</li>
 <li>在分支 terminator 处插入写入 __cond_map_ptr（i8）与 __cvar_map_ptr（i64）以记录分支判定和比较变量值&#x2F;指针，用于运行期条件反馈。</li>
 </ol>
-<h3 id="identifyCriticalBB"><a href="#identifyCriticalBB" class="headerlink" title="identifyCriticalBB()"></a>identifyCriticalBB()</h3><ol>
-<li>遍历function</li>
-<li>遍历function的每个BB,如果这个BB存在多个后继,且该函数在taint中,BB也在taint中,然后遍历BB的所有后继,存在某个后继不在taint中,则当前BB时DDB</li>
-<li>统计相关信息</li>
-</ol>
+<h3 id="DDB计算"><a href="#DDB计算" class="headerlink" title="DDB计算"></a>DDB计算</h3><p>首先计算targets_BB ,由传入的目标文件计算初始目标BB,以及存在BB中call了有距离的函数时,插入当前BB</p>
+<p>由targets_BB 反向传播但过滤循环边得到taint_BB</p>
+<p>然后根据taint_BB 如果有后继不在taint中,即认为当前BB是DDB</p>
+<p>结果: 出现大量的DDB</p>
 <h3 id="instrument"><a href="#instrument" class="headerlink" title="instrument"></a>instrument</h3><p>为有距离信息的BB进行插桩,包括在distance位置加上自己的距离,以及count位置+1</p>
+<h1 id="动态增加部分-afl-fuzz-c"><a href="#动态增加部分-afl-fuzz-c" class="headerlink" title="动态增加部分 afl-fuzz.c"></a>动态增加部分 afl-fuzz.c</h1><p>扩展的共享内存段</p>
+<p>种子信息增加</p>
+<p>DDB条件判断</p>
+<p>种子评分和裁剪</p>
+<p>双forkserver支持</p>
+<h2 id="void-readDistanceAndTargets"><a href="#void-readDistanceAndTargets" class="headerlink" title="void readDistanceAndTargets()"></a>void readDistanceAndTargets()</h2><p>打开distance.txt targets.txt 只读</p>
+<p>逐行读取distance  用空格解析三个字段 idx dis flag</p>
+<p>把dis写入 distance_val[idx] &#x3D; dis;</p>
+<p>如果第三个字段是1 则critical_ids[count] &#x3D; idx;   存储DDB的id</p>
+<p>计算targets文件的行数  存储到targets_num</p>
+<h2 id="void-readCondition"><a href="#void-readCondition" class="headerlink" title="void readCondition()"></a>void readCondition()</h2><p>打开condition_info.txt 逐行读取</p>
+<p>以空格获取 id </p>
+<p>如果第二个token不是none 则转换第二个token为critical_id 并存储 critical_condition[critical_id] &#x3D; id;</p>
+<p>比较下一个token是否是int32 int64 匹配上则  condition_info[id] |&#x3D; 4|8; 32选4 64选8</p>
+<p>继续匹配var字符串 如果不是,则 condition_info[id] |&#x3D; 2; 获取改token的值(常量) </p>
+<p>存储的到condition_values[2 * id] &#x3D; value; </p>
+<p>对下一个token一样处理,但是condition_info[id] |&#x3D; 1; condition_values[2 * id + 1] &#x3D; value;</p>
+<h2 id="void-cb-cull-queue-void"><a href="#void-cb-cull-queue-void" class="headerlink" title="void cb_cull_queue(void)"></a>void cb_cull_queue(void)</h2><h2 id="add-to-queue"><a href="#add-to-queue" class="headerlink" title="add_to_queue()"></a>add_to_queue()</h2><p>计算距离有两套.基于no_critical_flag 标记</p>
+<p>默认使用calculate_cb_distance 函数计算距离,而此函数不依赖距离槽</p>
 <h2 id="条件值反馈与字节嗅探"><a href="#条件值反馈与字节嗅探" class="headerlink" title="条件值反馈与字节嗅探"></a>条件值反馈与字节嗅探</h2><ol>
 <li>相关全局变量（位于全局区，可 grep 关键字）<br> 变量	grep 关键词	含义<br> condition_bits	“static u64* condition_bits”	共享内存：每条件 2 个 u64 槽 (左&#x2F;右操作数或值截断)<br> cond_bits	“static u8* cond_bits”	每条件方向：0 未执行 &#x2F; 1 False &#x2F; 2 True<br> cond_num	“static u32 cond_num”	条件总数（从 1 开始，0 号空）<br> solved_cond	“static u8 solved_cond”	条件方向覆盖位或；&#x3D;3 表示两个方向都已触发<br> condition_info	“static u8 condition_info”	位标志：bit0 第二操作数常量；bit1 第一操作数常量；bit2 int32；bit3 int64<br> condition_values	“static u64 condition_values”	偶索引(2i)：当前最佳相似度得分(覆盖初始常量)；奇索引(2i+1)：若第二操作数是常量则存其值<br> critical_condition	“static u32 critical_condition”	critical bb → 绑定条件 id (φ 映射)<br> top_conformance	“top_conformance”	每条件当前“最佳相似度”对应队列样本指针<br> critical_bits	“static u8* critical_bits”	关键基本块状态 0 未&#x2F;1 活跃&#x2F;2 solved<br> solved_cbbs	“static u8 solved_cbbs”	标记已 solved 的关键块<br> distance_val	“static u32 distance_val”	静态基本块距离 (distance.txt)<br> queue_entry.cond_bits	“struct queue_entry”	[0]&#x3D;count，后续存本次执行触发的条件 ID<br> queue_entry.cond_vals	同上	与 cond_bits 配套：每条件两个 u64 拷贝值快照<br> queue_entry.cb_mask	同上	exploit 模式字节掩码（位1&#x2F;2&#x2F;4&#x3D;改&#x2F;删&#x2F;插）<br> queue_entry.conformance_mask	同上	explore(conformance) 模式下的掩码<br> queue_entry.critical_bbs &#x2F; critical_vals &#x2F; critical_difficulty	同上	当前输入激活的关键块列表 &#x2F; 其绑定条件值对快照 &#x2F; 变化次数（难度）</li>
 </ol>

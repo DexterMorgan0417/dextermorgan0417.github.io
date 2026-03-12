@@ -16,15 +16,15 @@
   <meta name="author" content="Dexter Morgan">
   <meta name="keywords" content="">
   
-    <meta name="description" content="概述作为AFL的c++重构,保留了基本的结构,但也做了一定的修改 项目类结构DFM模糊测试主类,用于协调各个模块工作 ForkServerManagerforkserver管理器,管理多个forkserver以提高进程并发效率 monitor变异器,只负责接收相关信息并对数据变异 Idea读感知AFL不做对目标程序的读感知,导致对于需要多次交互程序效率极低. linux 读类型的系统调用12345">
+    <meta name="description" content="项目概述作为AFL的c++重构,保留了基本的结构,但也做了一定的修改 架构设计由DFM主类协调各模块 DFM模糊测试主类,用于协调各个模块工作 ForkServerManagerforkserver管理器,管理多个forkserver以提高进程并发效率 monitor变异器,只负责接收相关信息并对数据变异 FuzzDriverfuzzdriver是模糊测试的执行器,负责将变异后的数据送入目标进程,">
 <meta property="og:type" content="article">
 <meta property="og:title" content="DFM">
 <meta property="og:url" content="https://dextermorgan0417.github.io/2025/05/30/DFM/index.html">
 <meta property="og:site_name" content="Dexter">
-<meta property="og:description" content="概述作为AFL的c++重构,保留了基本的结构,但也做了一定的修改 项目类结构DFM模糊测试主类,用于协调各个模块工作 ForkServerManagerforkserver管理器,管理多个forkserver以提高进程并发效率 monitor变异器,只负责接收相关信息并对数据变异 Idea读感知AFL不做对目标程序的读感知,导致对于需要多次交互程序效率极低. linux 读类型的系统调用12345">
+<meta property="og:description" content="项目概述作为AFL的c++重构,保留了基本的结构,但也做了一定的修改 架构设计由DFM主类协调各模块 DFM模糊测试主类,用于协调各个模块工作 ForkServerManagerforkserver管理器,管理多个forkserver以提高进程并发效率 monitor变异器,只负责接收相关信息并对数据变异 FuzzDriverfuzzdriver是模糊测试的执行器,负责将变异后的数据送入目标进程,">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-05-30T02:52:10.000Z">
-<meta property="article:modified_time" content="2025-09-26T12:52:57.604Z">
+<meta property="article:modified_time" content="2025-12-11T09:28:15.627Z">
 <meta property="article:author" content="Dexter Morgan">
 <meta property="article:tag" content="DFM">
 <meta name="twitter:card" content="summary_large_image">
@@ -149,6 +149,18 @@
           
           
             <li class="nav-item">
+              <a class="nav-link" href="/directory/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>目录索引</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
               <a class="nav-link" href="/tags/" target="_self">
                 <i class="iconfont icon-tags-fill"></i>
                 <span>标签</span>
@@ -220,7 +232,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.7k 字
+          1.8k 字
         
       </span>
     
@@ -231,7 +243,7 @@
         
         
         
-          14 分钟
+          15 分钟
         
       </span>
     
@@ -286,10 +298,15 @@
             
               <div class="markdown-body">
                 
-                <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>作为AFL的c++重构,保留了基本的结构,但也做了一定的修改</p>
-<h2 id="项目类结构"><a href="#项目类结构" class="headerlink" title="项目类结构"></a>项目类结构</h2><h2 id="DFM"><a href="#DFM" class="headerlink" title="DFM"></a>DFM</h2><p>模糊测试主类,用于协调各个模块工作</p>
+                <h1 id="项目概述"><a href="#项目概述" class="headerlink" title="项目概述"></a>项目概述</h1><p>作为AFL的c++重构,保留了基本的结构,但也做了一定的修改</p>
+<h1 id="架构设计"><a href="#架构设计" class="headerlink" title="架构设计"></a>架构设计</h1><p>由DFM主类协调各模块</p>
+<h2 id="DFM"><a href="#DFM" class="headerlink" title="DFM"></a>DFM</h2><p>模糊测试主类,用于协调各个模块工作</p>
 <h2 id="ForkServerManager"><a href="#ForkServerManager" class="headerlink" title="ForkServerManager"></a>ForkServerManager</h2><p>forkserver管理器,管理多个forkserver以提高进程并发效率</p>
 <h2 id="monitor"><a href="#monitor" class="headerlink" title="monitor"></a>monitor</h2><p>变异器,只负责接收相关信息并对数据变异</p>
+<h2 id="FuzzDriver"><a href="#FuzzDriver" class="headerlink" title="FuzzDriver"></a>FuzzDriver</h2><p>fuzzdriver是模糊测试的执行器,负责将变异后的数据送入目标进程,并收集目标进程相关信息</p>
+<h2 id="ICorpus"><a href="#ICorpus" class="headerlink" title="ICorpus"></a>ICorpus</h2><p>语料库抽象接口,负责管理种子池并去重</p>
+<h2 id="Sampler"><a href="#Sampler" class="headerlink" title="Sampler"></a>Sampler</h2><p>采样器抽象类,负责维护自身选择的种子队列,并为driver提供种子,并接受相关信息,以及选择变异算法.</p>
+<h2 id="Cirilla"><a href="#Cirilla" class="headerlink" title="Cirilla"></a>Cirilla</h2><p>DGF策略模块,基于调用树,支持多目标区分和协同</p>
 <h1 id="Idea"><a href="#Idea" class="headerlink" title="Idea"></a>Idea</h1><h2 id="读感知"><a href="#读感知" class="headerlink" title="读感知"></a>读感知</h2><p>AFL不做对目标程序的读感知,导致对于需要多次交互程序效率极低.</p>
 <h3 id="linux-读类型的系统调用"><a href="#linux-读类型的系统调用" class="headerlink" title="linux 读类型的系统调用"></a>linux 读类型的系统调用</h3><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">read</span>：从文件描述符读取数据（如文件、管道、<span class="hljs-keyword">socket</span>）。<br>pread、pread64：带偏移量的读取。<br>readv：分散读取（一次读取到多个缓冲区）。<br><span class="hljs-keyword">recv</span>、recvfrom、recvmsg：从 <span class="hljs-keyword">socket</span> 接收数据。<br>getdents、getdents64：读取目录项。<br>lseek（配合 <span class="hljs-keyword">read</span> 使用）：定位文件指针。<br>mmap：将文件内容映射到内存后可直接读取。<br><span class="hljs-keyword">ioctl</span>（部分命令）：某些设备的读操作。<br>fgets、fread（C库函数，底层还是调用上述系统调用）。<br></code></pre></td></tr></table></figure>
 
@@ -312,7 +329,7 @@
 <p>对于 SOCK_SEQPACKET&#x2F;STREAM，调用 listen&#x2F;accept。accept 返回连接 socket 用于 recvmsg。<br>使用 recvmsg()，把 msg_control 指向一个足够大的缓冲区（CMSG_SPACE(sizeof(int))）；成功后用 CMSG_FIRSTHDR &#x2F; CMSG_NXTHDR 查找 cmsg_level SOL_SOCKET &amp;&amp; cmsg_type SCM_RIGHTS，从 CMSG_DATA(cmsg) 读取整型文件描述符。</p>
 <p>建议在接收后用 getsockopt(…, SO_PEERCRED) 校验对端 UID&#x2F;PID（安全性），并根据需要对接收到的 fd 设置 close-on-exec 标志或其它选项。<br>处理 EINTR、msg 长度为 0、ancillary 数据缺失等边界情况。</p>
 <h2 id="读写目标进程"><a href="#读写目标进程" class="headerlink" title="读写目标进程"></a>读写目标进程</h2><p>使用process_vm_readv&#x2F;writev  不需要ptrace, 防止目标进程存在反调试代码.</p>
-<h1 id="代码主体"><a href="#代码主体" class="headerlink" title="代码主体"></a>代码主体</h1><h2 id="日志模块"><a href="#日志模块" class="headerlink" title="日志模块"></a>日志模块</h2><h3 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h3><p>日志等级划分</p>
+<h1 id="关键实现"><a href="#关键实现" class="headerlink" title="关键实现"></a>关键实现</h1><h2 id="日志模块"><a href="#日志模块" class="headerlink" title="日志模块"></a>日志模块</h2><h3 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h3><p>日志等级划分</p>
 <p>结构化日志记录</p>
 <p>实时监控(???)</p>
 <p>异常检测</p>
@@ -337,7 +354,7 @@
 
 <h1 id="功能实现"><a href="#功能实现" class="headerlink" title="功能实现"></a>功能实现</h1><h2 id="IPC"><a href="#IPC" class="headerlink" title="IPC"></a>IPC</h2><p>改用sockerpair进行IPC</p>
 <h2 id="异步处理"><a href="#异步处理" class="headerlink" title="异步处理"></a>异步处理</h2><p>epoll &#x2F; signal</p>
-
+<h1 id="使用指南"><a href="#使用指南" class="headerlink" title="使用指南"></a>使用指南</h1><h1 id="拓展计划"><a href="#拓展计划" class="headerlink" title="拓展计划"></a>拓展计划</h1>
                 
               </div>
             

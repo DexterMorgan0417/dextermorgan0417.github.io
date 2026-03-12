@@ -16,17 +16,19 @@
   <meta name="author" content="Dexter Morgan">
   <meta name="keywords" content="">
   
-    <meta name="description" content="方向定向模糊测试 idea select fuzz 结合windranger | halo dump调用链,做目标模块化分离,以及输入数据的约束(!) 复现halo的功能 增强Halo">
+    <meta name="description" content="方向定向模糊测试 已有的方法的优缺点已 idea select fuzz 结合windranger | halo dump调用链,做目标模块化分离,以及输入数据的约束(!) 复现halo的功能 增强Halo  Call Tree (CT，调用树)描述一次具体程序执行（或单线程的一次运行）中按调用&#x2F;返回关系展开的树。每次函数调用对应一个节点（对应一个栈帧实例）。节点可以重复出现（递归产生多">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Paper1">
 <meta property="og:url" content="https://dextermorgan0417.github.io/2025/09/21/Paper1/index.html">
 <meta property="og:site_name" content="Dexter">
-<meta property="og:description" content="方向定向模糊测试 idea select fuzz 结合windranger | halo dump调用链,做目标模块化分离,以及输入数据的约束(!) 复现halo的功能 增强Halo">
+<meta property="og:description" content="方向定向模糊测试 已有的方法的优缺点已 idea select fuzz 结合windranger | halo dump调用链,做目标模块化分离,以及输入数据的约束(!) 复现halo的功能 增强Halo  Call Tree (CT，调用树)描述一次具体程序执行（或单线程的一次运行）中按调用&#x2F;返回关系展开的树。每次函数调用对应一个节点（对应一个栈帧实例）。节点可以重复出现（递归产生多">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://dextermorgan0417.github.io/2025/09/21/Paper1/image-20251216104635915.png">
 <meta property="article:published_time" content="2025-09-21T02:02:55.000Z">
-<meta property="article:modified_time" content="2025-09-21T03:19:26.272Z">
+<meta property="article:modified_time" content="2025-12-24T03:30:10.351Z">
 <meta property="article:author" content="Dexter Morgan">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dextermorgan0417.github.io/2025/09/21/Paper1/image-20251216104635915.png">
   
   
   
@@ -148,6 +150,18 @@
           
           
             <li class="nav-item">
+              <a class="nav-link" href="/directory/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>目录索引</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
               <a class="nav-link" href="/tags/" target="_self">
                 <i class="iconfont icon-tags-fill"></i>
                 <span>标签</span>
@@ -219,7 +233,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          40 字
+          2.5k 字
         
       </span>
     
@@ -230,7 +244,7 @@
         
         
         
-          1 分钟
+          21 分钟
         
       </span>
     
@@ -285,13 +299,102 @@
             
               <div class="markdown-body">
                 
-                <h2 id="方向"><a href="#方向" class="headerlink" title="方向"></a>方向</h2><p>定向模糊测试</p>
+                <h1 id="方向"><a href="#方向" class="headerlink" title="方向"></a>方向</h1><p>定向模糊测试</p>
+<h1 id="已有的方法的优缺点"><a href="#已有的方法的优缺点" class="headerlink" title="已有的方法的优缺点"></a>已有的方法的优缺点</h1><p>已</p>
 <h1 id="idea"><a href="#idea" class="headerlink" title="idea"></a>idea</h1><ul>
 <li>select fuzz 结合windranger | halo</li>
 <li>dump调用链,做目标模块化分离,以及输入数据的约束(!)</li>
 <li>复现halo的功能</li>
 <li>增强Halo</li>
 </ul>
+<p>Call Tree (CT，调用树)<br>描述一次具体程序执行（或单线程的一次运行）中按调用&#x2F;返回关系展开的树。每次函数调用对应一个节点（对应一个栈帧实例）。节点可以重复出现（递归产生多个不同栈帧节点）。CT 是时间序列的嵌套展开，严格反映那次运行的实际调用序列。<br>Calling Context Tree (CCT，调用上下文树，又称 Call Path Tree)<br>把运行时观察到的所有调用路径按调用上下文组织成的一棵树。CCT 的每个节点代表“在某个调用路径下到达某函数”的上下文（即从程序入口到当前调用的调用序列）。相同的调用上下文合并为同一节点，节点通常带有聚合信息（调用次数、耗时等）。</p>
+<ol>
+<li>反向传播识别所有relevant BB relevant Function</li>
+</ol>
+<h2 id="CT能提供哪些信息"><a href="#CT能提供哪些信息" class="headerlink" title="CT能提供哪些信息?"></a>CT能提供哪些信息?</h2><p>程序执行的所以可能的路径,如果加上相关性,可以进一步收缩树大小.</p>
+<p>运行时能够得到种子执行的完整路径&#x2F;相关路径,以及在哪个分支节点存在偏差</p>
+<p>根据树可以更详细的得到控制流距离</p>
+<h2 id="CT应该存储的信息"><a href="#CT应该存储的信息" class="headerlink" title="CT应该存储的信息"></a>CT应该存储的信息</h2><p>应用数据流反向闭包,得到所有使用了与目标位置相关的变量的函数.在CT上标记该函数.</p>
+<h2 id="构建CT出现的问题"><a href="#构建CT出现的问题" class="headerlink" title="构建CT出现的问题"></a>构建CT出现的问题</h2><p>仅仅基于CG图,会出现环路问题,存在A-&gt;B-&gt;C-&gt;A,简单的构建树会导致死循环</p>
+<p><img src="/2025/09/21/Paper1/image-20251216104635915.png" srcset="/img/loading.gif" lazyload alt="image-20251216104635915"></p>
+<p>分析下这个环</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><code class="hljs c">png_safe_execute(png_imagep image_in, <span class="hljs-type">int</span> (*function)(png_voidp), png_voidp arg)<br>&#123;<br>   <span class="hljs-keyword">volatile</span> png_imagep image = image_in;<br>   <span class="hljs-keyword">volatile</span> <span class="hljs-type">int</span> result;<br>   <span class="hljs-keyword">volatile</span> png_voidp saved_error_buf;<br>   jmp_buf safe_jmpbuf;<br><br>   <span class="hljs-comment">/* Safely execute function(arg) with png_error returning to this function. */</span><br>   saved_error_buf = image-&gt;opaque-&gt;error_buf;<br>   result = setjmp(safe_jmpbuf) == <span class="hljs-number">0</span>;<br><br>   <span class="hljs-keyword">if</span> (result != <span class="hljs-number">0</span>)<br>   &#123;<br><br>      image-&gt;opaque-&gt;error_buf = safe_jmpbuf;<br>      result = function(arg);<br>   &#125;<br><br>   image-&gt;opaque-&gt;error_buf = saved_error_buf;<br><br>   <span class="hljs-comment">/* And do the cleanup prior to any failure return. */</span><br>   <span class="hljs-keyword">if</span> (result == <span class="hljs-number">0</span>)<br>      png_image_free(image);<br><br>   <span class="hljs-keyword">return</span> result;<br>&#125;<br><br><span class="hljs-type">void</span> PNGAPI<br><span class="hljs-title function_">png_image_free</span><span class="hljs-params">(png_imagep image)</span><br>&#123;<br>   <span class="hljs-comment">/* Safely call the real function, but only if doing so is safe at this point</span><br><span class="hljs-comment">    * (if not inside an error handling context).  Otherwise assume</span><br><span class="hljs-comment">    * png_safe_execute will call this API after the return.</span><br><span class="hljs-comment">    */</span><br>   <span class="hljs-keyword">if</span> (image != <span class="hljs-literal">NULL</span> &amp;&amp; image-&gt;opaque != <span class="hljs-literal">NULL</span> &amp;&amp;<br>      image-&gt;opaque-&gt;error_buf == <span class="hljs-literal">NULL</span>)<br>   &#123;<br>      <span class="hljs-comment">/* Ignore errors here: */</span><br>      (<span class="hljs-type">void</span>)png_safe_execute(image, png_image_free_function, image);<br>      image-&gt;opaque = <span class="hljs-literal">NULL</span>;<br>   &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>png_safe_execute 是一个安全函数执行包装器</p>
+<p>使用setjmp 保存返回点,调用目标函数,如果出现问题,目标使用longjmp返回,就得使用free清理资源</p>
+<p>但png_image_free 也使用了这个包装器</p>
+<h2 id="构建FCT-Function-Call-Tree"><a href="#构建FCT-Function-Call-Tree" class="headerlink" title="构建FCT(Function Call  Tree)"></a>构建FCT(Function Call  Tree)</h2><p>从main函数开始</p>
+<h2 id="构建-BB执行树"><a href="#构建-BB执行树" class="headerlink" title="构建 BB执行树"></a>构建 BB执行树</h2><p>前置问题</p>
+<p>假如循环体中,不止一个出口怎么办?</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">for</span>(xx)<br>&#123;<br>	<span class="hljs-keyword">if</span>(x)jmp A;<br>&#125;<br>A:<br></code></pre></td></tr></table></figure>
+
+<p>br 分支（BranchInst）</p>
+<p>无条件分支：br label %dest<br>条件分支：br i1 %cond, label %then, label %else<br>这是最常见的 CFG 边来源。<br>switch 多路分支（SwitchInst）</p>
+<p>switch i32 %x, label %default [ i32 0, label %case0 … ]<br>产生多条 successor 边：default + 各 case。<br>indirectbr 间接分支（IndirectBrInst）</p>
+<p>indirectbr i8* %addr, [label %L1, label %L2, …]<br>目标地址运行时决定（从地址跳转），常见于跳转表&#x2F;异常化实现&#x2F;特定优化。<br>invoke（InvokeInst）与异常边</p>
+<p>invoke 同时有 正常返回目标 和 异常目标（landingpad） 两条 CFG 边：<br>normal dest<br>unwind dest<br>如果你做 BB 图，不能只看 br&#x2F;switch，否则会漏异常控制流。<br>callbr（CallBrInst）</p>
+<p>用于 GNU asm goto 这类场景：除了正常返回块外，还有一组“间接跳转目标”基本块。<br>也是多 successor。<br>ret 返回（ReturnInst）</p>
+<p>终结当前函数控制流（没有 successor）。<br>但在跨过程分析里，常被建模成“返回到调用点继续执行”的跨过程边（这不是 IR 自带 CFG 边，是你分析建的边）。<br>resume &#x2F; catchswitch &#x2F; catchret &#x2F; cleanupret（异常处理相关终结指令）</p>
+<p>这些属于异常控制流终结指令体系（尤其 Windows SEH &#x2F; Itanium EH lowering）。<br>如果你分析要覆盖异常路径，需要把它们的 successor 也纳入图。<br>unreachable</p>
+<p>表示不可达终点（无 successor），但会影响 CFG（例如某些分支到这里）。</p>
+<h2 id="ICFG提供的信息"><a href="#ICFG提供的信息" class="headerlink" title="ICFG提供的信息"></a>ICFG提供的信息</h2><p>节点<br>BasicBlock（或可选择折叠到 Function&#x2F;BB-id）：每个 BB 唯一标识并保留指向其 Function。<br>边（有向）<br>CFG 边：BB -&gt; successor(BB)（来自 br&#x2F;switch&#x2F;indirectbr&#x2F;invoke 等 terminator 的后继）。<br>Call 边：callsite_BB -&gt; callee_entry_BB（直接调用可精确解析）。<br>Return 边：callee_return_BB -&gt; callsite_continuation_BB（把调用与返回连成闭环，识别跨函数循环必需）。<br>Exception&#x2F;Unwind 边：invoke 的 unwind dest、resume&#x2F;catch 等（如需异常流）。<br>边属性（metadata）<br>EdgeKind：{CFG, Call, Return, Exception, Other}。<br>viaInst：产生该边的 Instruction*（用于获取 DebugLoc、打印 callsite）。<br>条件信息：对于条件 br 标注 true&#x2F;false；switch 标注 case value &#x2F; default。<br>源&#x2F;目标的 DebugLoc（便于打印 file:line）。<br>可选权重&#x2F;热度（来自 profile sampling 或运行时 trace）。</p>
+<h1 id="污点分析"><a href="#污点分析" class="headerlink" title="污点分析"></a>污点分析</h1><p>精确&#x2F;模糊 原始字节序列与相关变量是否有关,再根据静态分析结果来精确到某些序列的确定值</p>
+<p>传统的污点分析:</p>
+<p>污点分析可以抽象成一个三元组&lt;sources, sinks, sanitizers&gt;的形式。sources：污点源，代表直接引入不受信任的数据或者机密数据到系统中。sink：污点汇聚点，代表直接产生安全敏感操作或者泄露隐私数据到外界。sanitizer：无害处理，代表通过数据加密或者移除危害操作等手段使数据传播不再对软件系统的信息安全产生危害</p>
+<h2 id="污点分析模型"><a href="#污点分析模型" class="headerlink" title="污点分析模型"></a>污点分析模型</h2><p>原始字节序列 作为目标程序的输入,是一串有一定长度的二进制序列,<strong>没有任何限制</strong>.称为初始输入向量(original input vector)</p>
+<p>基于不同语义的程序,对OIV的处理是不同的.相比与解释器&#x2F;编译器等具有自己独特语法的程序,大多数对于数据出现的位置是不作严格要求的,通过自定义的词法分析可以得到<strong>重要数据</strong>.</p>
+<p>例如,对c语言,下面两个语句是相同的</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs ebnf"><span class="hljs-attribute">int x</span>=a+b;<br><span class="hljs-attribute">         int     x</span>=  a +  b:<br></code></pre></td></tr></table></figure>
+
+<p>但是实际的OIV不完全相同,存在被目标过滤的字符&#x2F;字符串 (空格被吞了).</p>
+<p>基于这种程序,做严格污点分析是比较难的,因为目标的特征很难一整概括</p>
+<p>然后,对于另一种程序,对OIV的处理依赖严格的文件结构,图片,视频等.基于这种程序,可以做自动文件结构还原,或者接受手动书写的结构.</p>
+<h2 id="污点分析需要做什么-输出哪些信息"><a href="#污点分析需要做什么-输出哪些信息" class="headerlink" title="污点分析需要做什么? 输出哪些信息?"></a>污点分析需要做什么? 输出哪些信息?</h2><p>识别OIV的字节序列属性,是定长还是变长.哪些变量依赖了哪段子序列.</p>
+<p>形式化为:</p>
+<figure class="highlight gcode"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gcode">OIV[<span class="hljs-symbol">n1</span>,<span class="hljs-symbol">n2</span>]+OIV[<span class="hljs-symbol">n3</span>,<span class="hljs-symbol">n4</span>]+OIV[<span class="hljs-symbol">n5</span>,<span class="hljs-symbol">n6</span>]  =&gt; value<span class="hljs-comment">(nx)</span><br></code></pre></td></tr></table></figure>
+
+<p>依照这些信息,变异器才能高效的工作,实现<strong>种子进化</strong>而非随机.</p>
+<p><strong>识别出约束变量和数据变量</strong></p>
+<p>对于变量,有些作为功能选择,有些作为数据量,有些二者皆有</p>
+<p>是静态还是动态? 抑或是动静结合</p>
+<p><strong>提取调用树的分支节点的跳转依赖关系</strong></p>
+<p>得到所有分支节点的边 依赖于哪些变量,变量又反推到子序列中</p>
+<p><strong>使用的方法</strong></p>
+<p>读感知,依靠数据代码流完成数据流的正向传播</p>
+<h1 id="污点分析和数据传播流"><a href="#污点分析和数据传播流" class="headerlink" title="污点分析和数据传播流"></a>污点分析和数据传播流</h1><p>基于AST和粗糙数据流的反向传播</p>
+<p>例如,目标函数&#x2F;BB 使用了变量 x ,y</p>
+<p>出现以下代码</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs aspectj"><span class="hljs-keyword">int</span> result=f1(x,y)<br><br><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">f2</span><span class="hljs-params">(x,y)</span></span><br><span class="hljs-function"></span>&#123;<br>	xxx<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>对于跨函数数据流,则保守认为,全参数影响函数内的所有变量</p>
+<p>尽管存在假阳性,但是以此可以完成得到&lt;目标位置变量,传播影响变量集合&gt;</p>
+<p>进而追踪到输入函数(read fsacnf fread等)</p>
+<h1 id="变异器"><a href="#变异器" class="headerlink" title="变异器"></a>变异器</h1><p>基于CT调用树反馈以及污点分析给出的信息,进行定向或者模糊变异,以突破约束条件,到达目标位置.</p>
+<h1 id="种子聚类和维护"><a href="#种子聚类和维护" class="headerlink" title="种子聚类和维护"></a>种子聚类和维护</h1><h2 id="如何筛选不可达的种子"><a href="#如何筛选不可达的种子" class="headerlink" title="如何筛选不可达的种子"></a>如何筛选不可达的种子</h2><h1 id="识别导致程序退出的函数-BB"><a href="#识别导致程序退出的函数-BB" class="headerlink" title="识别导致程序退出的函数&#x2F;BB"></a>识别导致程序退出的函数&#x2F;BB</h1><h2 id="算法思路"><a href="#算法思路" class="headerlink" title="算法思路"></a>算法思路</h2><p>遍历函数,若存在NoReturn属性,记录</p>
+<p>记录终结指令为UnreachableInst 的BB</p>
+<p>记录main函数的return BB</p>
+<p>检测BB是否直接调用已知的退出函数</p>
+<h2 id="反向传播"><a href="#反向传播" class="headerlink" title="反向传播"></a>反向传播</h2><p>沿着直接跳转边进行反向传播,而非条件分支跳转.且不考虑间接调用情况(加剧考虑情况,不一定更号)</p>
+<p>理论：从 exit 基本块开始做反向图遍历，但只穿越那些以无条件分支连接的边；在每个访问到的基本块内检测“写返回值”和“副作用”指令，若发现副作用则记录并停止进一步回溯该路径。<br>目标产物：一个函数（例如 collectSourcesForExit(BB)）返回每个“来源 BB”的信息：{BB*, isWriteReturn, isSideEffecting, DebugLoc}。</p>
+<h2 id="存在的问题"><a href="#存在的问题" class="headerlink" title="存在的问题"></a>存在的问题</h2><p>若某些函数&#x2F;BB 虽然会退出进程&#x2F;线程,但是也完成了某些重要功能,这种情况下是否要保留还是进一步分析</p>
+<p>如何做反向传播的阻断?</p>
+<h1 id="反馈机制"><a href="#反馈机制" class="headerlink" title="反馈机制"></a>反馈机制</h1><h1 id="关键算法和实现依赖"><a href="#关键算法和实现依赖" class="headerlink" title="关键算法和实现依赖"></a>关键算法和实现依赖</h1><h2 id="function反向传播算法"><a href="#function反向传播算法" class="headerlink" title="function反向传播算法"></a>function反向传播算法</h2><p>输入</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-type">static</span> std::unordered_map&lt;<span class="hljs-type">const</span> Function*, Func_Info&gt; TargetFunction;<br></code></pre></td></tr></table></figure>
+
+<p>输出</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-type">static</span> std::unordered_map&lt;<span class="hljs-type">const</span> Function*, Func_Info&gt; BackwardFunctions;<br></code></pre></td></tr></table></figure>
+
+<p>算法步骤</p>
+<ol>
+<li>使用LLVM提供的CG图,遍历每个节点,存储调用映射 &lt;caller,callees&gt;</li>
+<li>遍历TargetFunction 加入BackwardFunctions 和工作队列中,并标记函数已经处理</li>
+<li>遍历队列</li>
+<li>取出队头函数,并基于1获取的信息得到所有调用者,如果没有调用者则重复当前步骤</li>
+<li>遍历调用者,过滤LLVM内部函数.如果该函数没有被处理过,加入到BackwardFunctions 和队尾.</li>
+</ol>
+<p>算法缺陷:</p>
+<p>LLVM CG未包含间接调用情况,算法会被间接调用中断传播</p>
+<p>仅标记函数是否处理来避免循环爆炸,会出现遗漏情况.例如 A-&gt;B-C  D-&gt;B-&gt;C. A D必有一个被丢弃</p>
 
                 
               </div>

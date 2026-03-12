@@ -138,6 +138,18 @@
           
           
             <li class="nav-item">
+              <a class="nav-link" href="/directory/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>目录索引</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
               <a class="nav-link" href="/tags/" target="_self">
                 <i class="iconfont icon-tags-fill"></i>
                 <span>标签</span>
@@ -217,6 +229,283 @@
               <div class="col-12 col-md-10 m-auto">
                 
 
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/07/08/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/selectfuzz/" target="_self">
+          selectfuzz
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/08/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/selectfuzz/" target="_self">
+        <div>
+          摘要selectfuzz基于aflgo改进,使用了新的距离度量计算方法,和选择性路径探索 距离计算使用一种方法,计算一个基本块到目标代码(基本块)的多路径到达概率 计算基本块到目标位置的概率p,将p的倒数作为距离,且算法假设每个条件分支的概率都相同 1234（1）初始化：构建程序的过程间控制流图（ICFG）。初始化所有基本块的状态为 0（未计算状态），并将它们的到达概率 prob[b] 设置为 0
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-07-08 21:41" pubdate>
+              2025-07-08
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/paper/" class="category-chain-item">paper</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/paper/">#paper</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/07/02/%E9%A1%B9%E7%9B%AE%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/selectfuzz%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" target="_self">
+          selectfuzz源码分析
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/02/%E9%A1%B9%E7%9B%AE%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/selectfuzz%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" target="_self">
+        <div>
+          使用LLVMafl-clang-fast.cmain 12345find_obj(argv[0]);//查找afl-llvm-rt.o位置edit_params(argc, argv);execvp(cc_params[0], (char**)cc_params);  afl-llvm-pass.so.cc使用LLVMPass,1在预处理阶段收集基本块信息 afl-llvm-rt.o.c作为AFL
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-07-02 17:25" pubdate>
+              2025-07-02
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/FUZZ/" class="category-chain-item">FUZZ</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/FUZZ/">#FUZZ</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/06/17/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/WindRanger/" target="_self">
+          WindRanger
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/06/17/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/WindRanger/" target="_self">
+        <div>
+          摘要 内容： 介绍了论文的核心工作——WindRanger，一个由“偏差基本块”（Deviation Basic Blocks, DBBs）驱动的定向灰盒模糊器。摘要首先阐述了DGF的目标是引导模糊器到达程序中预定义的目标位置（如漏洞点、补丁代码），其关键在于评估种子输入的执行轨迹与目标位置的距离（种子距离）。现有方法（如AFLGo）基于控制流图计算所有执行基本块到目标的距离并求平均，存在两个主要
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-06-17 10:05" pubdate>
+              2025-06-17
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/paper/" class="category-chain-item">paper</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/paper/">#paper</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/06/05/Pwn/pwndbg%E5%91%BD%E4%BB%A4/" target="_self">
+          pwndbg命令
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/06/05/Pwn/pwndbg%E5%91%BD%E4%BB%A4/" target="_self">
+        <div>
+          
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-06-05 16:19" pubdate>
+              2025-06-05
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/05/30/DFM/" target="_self">
+          DFM
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/05/30/DFM/" target="_self">
+        <div>
+          项目概述作为AFL的c++重构,保留了基本的结构,但也做了一定的修改 架构设计由DFM主类协调各模块 DFM模糊测试主类,用于协调各个模块工作 ForkServerManagerforkserver管理器,管理多个forkserver以提高进程并发效率 monitor变异器,只负责接收相关信息并对数据变异 FuzzDriverfuzzdriver是模糊测试的执行器,负责将变异后的数据送入目标进程,
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-05-30 10:52" pubdate>
+              2025-05-30
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/DFM/" class="category-chain-item">DFM</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/DFM/">#DFM</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
 
   <div class="row mx-auto index-card">
     
@@ -495,204 +784,11 @@
     </article>
   </div>
 
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2025/01/08/qemu%E4%BD%BF%E7%94%A8/" target="_self">
-          qemu使用
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/01/08/qemu%E4%BD%BF%E7%94%A8/" target="_self">
-        <div>
-          
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2025-01-08 20:13" pubdate>
-              2025-01-08
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/12/30/%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95-Michael%20Sutton/%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86%20%E7%9B%AE%E6%A0%87%E5%92%8C%E8%87%AA%E5%8A%A8%E5%8C%96/" target="_self">
-          目标和自动化
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/12/30/%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95-Michael%20Sutton/%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86%20%E7%9B%AE%E6%A0%87%E5%92%8C%E8%87%AA%E5%8A%A8%E5%8C%96/" target="_self">
-        <div>
-          第七章 环境变量和参数的模糊测试本地测试环境变量HOOK getenv() 变异其返回的字符串 检查返回代码&#x2F;wait waitpid函数检查状态 第八章 环境变量和参数的模糊测试: 自动化iFUZZ 本地模糊器
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-12-30 22:44" pubdate>
-              2024-12-30
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/12/28/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%AE%89%E5%85%A8/angr/" target="_self">
-          anger
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/12/28/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%AE%89%E5%85%A8/angr/" target="_self">
-        <div>
-          使用文档装载程序 12import angrproj = angr.Project(&#x27;/bin/true&#x27;)
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-12-28 22:41" pubdate>
-              2024-12-28
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/anger/" class="category-chain-item">anger</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/anger/">#anger</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/12/27/%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95-Michael%20Sutton/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E5%92%8C%E6%B5%8B%E8%AF%95%E6%95%B0%E6%8D%AE%E7%94%9F%E6%88%90/" target="_self">
-          第六章-自动化测试和测试数据生成
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/12/27/%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95-Michael%20Sutton/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E5%92%8C%E6%B5%8B%E8%AF%95%E6%95%B0%E6%8D%AE%E7%94%9F%E6%88%90/" target="_self">
-        <div>
-          自动化测试模糊测试相比于其他测试方法，核心在于能有大量的自动化测试 数据生成整数边界及溢出 尽可能生成目标接受的数据格式，以免浪费成本
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-12-27 09:54" pubdate>
-              2024-12-27
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/12/23/%E6%9C%AC%E7%A7%91%E6%AF%95%E8%AE%BE/" target="_self">
-          本科毕设
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/12/23/%E6%9C%AC%E7%A7%91%E6%AF%95%E8%AE%BE/" target="_self">
-        <div>
-          摘要此毕设期望在CTF 中能快速找到Pwn漏洞，由于现在pwn题越来越多的套壳，逆向成本增加，使得寻找漏洞点难度加大 关键字： 软件漏洞挖掘，FUZZ,符号执行 第一章 绪论1.1 常见漏洞分析常见的如栈溢出，格式化字符串，double free,UAF,堆溢出 这些漏洞代码出现crash的地方往往和漏洞代码并不相同 栈溢出1234567#include &lt;stdio.h&gt;void m
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-12-23 22:23" pubdate>
-              2024-12-23
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
 
 
   <nav aria-label="navigation">
     <span class="pagination" id="pagination">
-      <a class="extend prev" rel="prev" href="/page/2/#board"><i class="iconfont icon-arrowleft"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/#board">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/#board">4</a><a class="page-number" href="/page/5/#board">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/#board">7</a><a class="extend next" rel="next" href="/page/4/#board"><i class="iconfont icon-arrowright"></i></a>
+      <a class="extend prev" rel="prev" href="/page/2/#board"><i class="iconfont icon-arrowleft"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/#board">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/#board">4</a><a class="page-number" href="/page/5/#board">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/#board">8</a><a class="extend next" rel="next" href="/page/4/#board"><i class="iconfont icon-arrowright"></i></a>
     </span>
   </nav>
 
