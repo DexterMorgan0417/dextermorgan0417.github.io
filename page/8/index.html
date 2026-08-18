@@ -138,6 +138,18 @@
           
           
             <li class="nav-item">
+              <a class="nav-link" href="/program-analysis/" target="_self">
+                <i class="iconfont icon-book-fill"></i>
+                <span>程序分析</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
               <a class="nav-link" href="/directory/" target="_self">
                 <i class="iconfont icon-link-fill"></i>
                 <span>目录索引</span>
@@ -229,6 +241,358 @@
               <div class="col-12 col-md-10 m-auto">
                 
 
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/05/10/Pwn/IO/FSOP/" target="_self">
+          FSOP
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/05/10/Pwn/IO/FSOP/" target="_self">
+        <div>
+          原理：劫持_IO_list_all 伪造 IO 链表，实质是伪造vtable虚表 一般伪造_IO_overflow_t位置，exit或abort都会刷新IO并调用这个函数 而_IO_flush_all_lockp不需要攻击者手动调用，在一些情况下这个函数会被系统调用：  当libc执行abort流程时 当执行exit函数时 当执行流从main函数返回时  IO伪造条件(2.23),(2.23之后的
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-05-10 23:18" pubdate>
+              2024-05-10
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Pwn/" class="category-chain-item">Pwn</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/Pwn/IO/" class="category-chain-item">IO</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Pwn/">#Pwn</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/05/10/Pwn/IO/IO/" target="_self">
+          IO简述
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/05/10/Pwn/IO/IO/" target="_self">
+        <div>
+          linux以文件流描述数据交换与传输，包括IO 标准文件流有三个 stdin：标准输入 stdout：标准输出 stderr：标准错误 glibc中源码如下 （2.23） 123extern struct _IO_FILE_plus _IO_2_1_stdin_;extern struct _IO_FILE_plus _IO_2_1_stdout_;extern struct _IO_FILE_p
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-05-10 23:18" pubdate>
+              2024-05-10
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Pwn/" class="category-chain-item">Pwn</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/Pwn/IO/" class="category-chain-item">IO</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Pwn/">#Pwn</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/05/06/ELF/ELF/" target="_self">
+          ELF结构解析
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/05/06/ELF/ELF/" target="_self">
+        <div>
+          概述本文为对ELF结构的大致解析，意在Pwn 及Linu恶意代码方面打好基础,参考资料参考ELF文件格式分析(滕启明) -北京大学信息科学技术学院操作系统实验室 本文讨论的是32位下的文件结构，参考资料好像也是32位的   目标格式如上图，链接视图是磁盘文件的结构，执行视图是目标文件被加载到内存的结构 ELF头部描述了整个文件 程序头部表(Program Header Table) 被用于指导如何
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-05-06 23:07" pubdate>
+              2024-05-06
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ELF/" class="category-chain-item">ELF</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/ELF/">#ELF</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/05/05/hexo/hexo/" target="_self">
+          hexo build
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/05/05/hexo/hexo/" target="_self">
+        <div>
+          hexo-renderer-marked至今产生的问题，图片使用路径是.&#x2F; 但是必须放到.&#x2F;filename&#x2F; 里面 造成edit和构建时显示不一致的问题  已经有人开始解决，但是截至2024&#x2F;5&#x2F;5还未解决 已经解决,替换部分代码 文章分类与标签分类有顺序性和层次性  标签没有 父子分类123categories:- A- B   A B
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-05-05 22:58" pubdate>
+              2024-05-05
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/05/05/Pwn/UnsortedbinAttack/" target="_self">
+          Unsorted bin Attack
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/05/05/Pwn/UnsortedbinAttack/" target="_self">
+        <div>
+          原理: Poc:    12345678910111213#include &lt;stdio.h&gt;#include &lt;stdlib.h&gt;int a[10]=&#123;1,2,3,4,5&#125;;int main() &#123;  long long int* p=malloc(0x500);  malloc(0x10);  free(p);  p[0]=0;  p[1]
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-05-05 22:53" pubdate>
+              2024-05-05
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Pwn/" class="category-chain-item">Pwn</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/Pwn/Heap/" class="category-chain-item">Heap</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/05/04/OS/%E6%A6%82%E8%BF%B0/" target="_self">
+          概述
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/05/04/OS/%E6%A6%82%E8%BF%B0/" target="_self">
+        <div>
+          
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-05-04 22:21" pubdate>
+              2024-05-04
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/OS/" class="category-chain-item">OS</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9C%9F%E7%9B%B8%E8%BF%98%E5%8E%9F/">#操作系统真相还原</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
 
   <div class="row mx-auto index-card">
     

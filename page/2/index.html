@@ -138,6 +138,18 @@
           
           
             <li class="nav-item">
+              <a class="nav-link" href="/program-analysis/" target="_self">
+                <i class="iconfont icon-book-fill"></i>
+                <span>程序分析</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
               <a class="nav-link" href="/directory/" target="_self">
                 <i class="iconfont icon-link-fill"></i>
                 <span>目录索引</span>
@@ -229,6 +241,288 @@
               <div class="col-12 col-md-10 m-auto">
                 
 
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/12/17/Darwin%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" target="_self">
+          Darwin源码分析
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/12/17/Darwin%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" target="_self">
+        <div>
+          A四个重要函数 12345678910void DARWIN_init(uint64_t, unsigned);//根据 DARWIN 当前为这个 seed 学到的“算子偏好向量”（policy / 基因），从所有 AFL mutation operators 里选出一个要执行的算子编号并返回。int DARWIN_SelectOperator(uint64_t seed)//把一次 fuzzin
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-12-17 10:33" pubdate>
+              2025-12-17
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/fuzz/" class="category-chain-item">fuzz</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/fuzz/">#fuzz</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/10/19/Selectfuzz%E5%88%86%E6%9E%90/" target="_self">
+          Selectfuzz和windranger插桩及差异性分析
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/10/19/Selectfuzz%E5%88%86%E6%9E%90/" target="_self">
+        <div>
+          selectfuzz 插桩分析使用前将目标位置以文件名:行号写入 BBtargets.txt和read.text中 然后用afl-clang-fast 传入文件,afl-clang-fast会寻找pass 并加载 afl-llvm-pass.so.cc作为编译器wapper的指定pass 在使用afl-clang-fast编译目标时自动加载 提供三个命令行参数 -distance -targets
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-10-19 10:32" pubdate>
+              2025-10-19
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/09/21/Paper1/" target="_self">
+          Paper1
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/09/21/Paper1/" target="_self">
+        <div>
+          方向定向模糊测试 结合执行树进行选择性的符号执行和种子调整 核心目的围绕核心目的 漏洞如何触发 给定漏洞位置  触发条件: 1 到达目标BB(这是最基本的要求) 2 根据漏洞分类来判断漏洞触发条件 已有的方法的优缺点selectfuzz某些位置过深,导致程序入口部分的基本块没有距离信息,导致初始fuzz退化为afl无定向 在magam测试中发现,条目:SND025 为什么要构建函数树和BB树好处:
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-09-21 10:02" pubdate>
+              2025-09-21
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/09/20/c++%E6%A0%87%E5%87%86%E5%BA%93/" target="_self">
+          c++标准库
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/09/20/c++%E6%A0%87%E5%87%86%E5%BA%93/" target="_self">
+        <div>
+          
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-09-20 09:49" pubdate>
+              2025-09-20
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/09/18/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/EMS/" target="_self">
+          EMS
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/09/18/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/EMS/" target="_self">
+        <div>
+          1. Abstract (摘要)  核心问题： 基于变异的模糊测试（Mutation-based Fuzzing）因其变异过程的高随机性而效率低下。现有的覆盖导向模糊测试（Coverage-based Fuzzing）解决方案（如自适应变异策略、约束求解集成）缺乏对历史模糊测试数据（fuzzing history）的细粒度重用，未能有效利用不同模糊测试进程（intra&#x2F;inter-tri
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-09-18 16:37" pubdate>
+              2025-09-18
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/paper/" class="category-chain-item">paper</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/paper/">#paper</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/09/15/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/Halo/" target="_self">
+          Halo
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/09/15/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/Halo/" target="_self">
+        <div>
+          1. Abstract (摘要)* ​核心问题：​​ 指出现有定向模糊测试工具（Directed Fuzzers）存在“间接输入生成问题”（indirect input generation problem），即生成的大部分输入（&gt;94%，如Magma基准测试所示）无法到达目标漏洞位置，浪费资源。* ​核心洞察：​​ 提出利用执行过的输入（无论是否可达目标）动态推断“可能不变式”（likel
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-09-15 18:45" pubdate>
+              2025-09-15
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/paper/" class="category-chain-item">paper</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/paper/">#paper</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
 
   <div class="row mx-auto index-card">
     
@@ -469,260 +763,6 @@
               <a href="/tags/LLVM/">#LLVM</a>
             
           </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2025/07/31/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/Automatic%20Library%20Fuzzing%20through%20API%20Relation%20evolvement/" target="_self">
-          evolvement
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/31/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/Automatic%20Library%20Fuzzing%20through%20API%20Relation%20evolvement/" target="_self">
-        <div>
-          摘要现有自动化软件库测试存在API误用和缺乏API序列多样性 作者提出NEXZZER 使用混合关系学习策略推断API关联关系 API误用和漏洞均可触发crash,这是模糊测试中误报的原因 这导致一个非常对立的矛盾,一方面我们尽可能希望以多样化的方式生成API调用序列以测试漏洞,又必须约束其调用,使其符合开发者规定的用法. 研究者提出两类主流的策略,第一是牺牲多样性换取准确性,通过复制现有的代码片段
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2025-07-31 22:55" pubdate>
-              2025-07-31
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2025/07/31/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E5%90%B4%E6%81%A9%E8%BE%BE/" target="_self">
-          机器学习-吴恩达
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/31/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0-%E5%90%B4%E6%81%A9%E8%BE%BE/" target="_self">
-        <div>
-          3 监督学习监督学习(supervised learning)是指从X-&gt;Y的映射,给学习的算法中包括正确答案(Y) 回归,指在无线多个可能的数字中预测一个结果 只有有限个输出的是分类 4 无监督学习在未被标识的数据中发现模式&#x2F;结构(聚类算法)
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2025-07-31 21:22" pubdate>
-              2025-07-31
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/AI/" class="category-chain-item">AI</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/AI/">#AI</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2025/07/25/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/ase24-zhou-magneto/" target="_self">
-          ase24-zhou-magneto
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/25/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/ase24-zhou-magneto/" target="_self">
-        <div>
-          摘要开源库的广泛使用容易导致漏洞传播到下游项目,使用漏洞利用分析以减少漏洞可达性的误报. 然后由于现漏洞函数被多层调用,现有的方法效果较差,作者提出名为magneto的分布方法,使用LLM赋能定向模糊测试. 核心思想是将整个调用链进行定向模糊测试,并使用LLM促进初始种子生成 漏洞分析使用软件组合分析提取项目的依赖树, 漏洞函数在项目中的调用链过于复杂时,难以生成有效利用代码 我们的方法我们提出了
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2025-07-25 15:39" pubdate>
-              2025-07-25
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2025/07/19/Getting-Started-with-LLVM/" target="_self">
-          Getting-Started-with-LLVM
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/19/Getting-Started-with-LLVM/" target="_self">
-        <div>
-          编译与安装LLVM外部项目LLVM是前后端分离,分为LLVM核心库和Clang.以中间代码表示(IR)为基础 Clang Check : 做语法检查,输出任意的内部抽象语法树(AST) Clang Format :整理代码缩进,整理代码规范 clang-tools-extra 收集了很多建立在Clang的程序,能够读取c&#x2F;c++代码并重构或分析 LLVM设计LLVM中间代码IR有两个重要
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2025-07-19 20:32" pubdate>
-              2025-07-19
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/LLVM/" class="category-chain-item">LLVM</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/LLVM/">#LLVM</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2025/07/16/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/FuzzMeetLLM-FSE24/" target="_self">
-          FuzzMeetLLM_FSE24
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/16/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/FuzzMeetLLM-FSE24/" target="_self">
-        <div>
-          LLM在FUZZ的作用驱动生成自动生成驱动代码.调用目标程序api.生成覆盖复杂API交互序列的测试用例（如数据库连接、文件解析) 但由于LLM的缺陷幻觉,导致生成的错误率高.且因模糊测试的强规范需求被显著放大. 输入生成缺陷检测五大挑战驱动生成LLM通常生成低质量的测试用例,缺乏精度 理解力有限LLM本质是概率预测,导致如果训练集不大,理解和处理的能力及其有限 3难以生成多样化输入 4因为幻觉,
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2025-07-16 10:42" pubdate>
-              2025-07-16
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2025/07/09/C%E8%AF%AD%E8%A8%80%E6%A0%87%E5%87%86/" target="_self">
-          C语言标准
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/09/C%E8%AF%AD%E8%A8%80%E6%A0%87%E5%87%86/" target="_self">
-        <div>
-          C语言库函数的标准主要分为以下三类 ISO 标准范围：定义核心语言特性及标准库（如 stdio.h、stdlib.h、string.h） 示例函数  printf（格式化输出） malloc（动态内存分配） strcpy（字符串复制）  标准版本：C99、C11、C17 等，由国际标准化组织（ISO）制定。 POSIX 标准 范围：扩展 UNIX 系统接口，涵盖进程、线程、信号、网络等系统级功能。
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2025-07-09 23:55" pubdate>
-              2025-07-09
-            </time>
-          </div>
-        
-        
         
       </div>
     </article>

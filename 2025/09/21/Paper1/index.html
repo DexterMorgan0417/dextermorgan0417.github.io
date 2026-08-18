@@ -16,16 +16,16 @@
   <meta name="author" content="Dexter Morgan">
   <meta name="keywords" content="">
   
-    <meta name="description" content="方向定向模糊测试 已有的方法的优缺点已 idea select fuzz 结合windranger | halo dump调用链,做目标模块化分离,以及输入数据的约束(!) 复现halo的功能 增强Halo  Call Tree (CT，调用树)描述一次具体程序执行（或单线程的一次运行）中按调用&#x2F;返回关系展开的树。每次函数调用对应一个节点（对应一个栈帧实例）。节点可以重复出现（递归产生多">
+    <meta name="description" content="方向定向模糊测试 结合执行树进行选择性的符号执行和种子调整 核心目的围绕核心目的 漏洞如何触发 给定漏洞位置  触发条件: 1 到达目标BB(这是最基本的要求) 2 根据漏洞分类来判断漏洞触发条件 已有的方法的优缺点selectfuzz某些位置过深,导致程序入口部分的基本块没有距离信息,导致初始fuzz退化为afl无定向 在magam测试中发现,条目:SND025 为什么要构建函数树和BB树好处:">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Paper1">
 <meta property="og:url" content="https://dextermorgan0417.github.io/2025/09/21/Paper1/index.html">
 <meta property="og:site_name" content="Dexter">
-<meta property="og:description" content="方向定向模糊测试 已有的方法的优缺点已 idea select fuzz 结合windranger | halo dump调用链,做目标模块化分离,以及输入数据的约束(!) 复现halo的功能 增强Halo  Call Tree (CT，调用树)描述一次具体程序执行（或单线程的一次运行）中按调用&#x2F;返回关系展开的树。每次函数调用对应一个节点（对应一个栈帧实例）。节点可以重复出现（递归产生多">
+<meta property="og:description" content="方向定向模糊测试 结合执行树进行选择性的符号执行和种子调整 核心目的围绕核心目的 漏洞如何触发 给定漏洞位置  触发条件: 1 到达目标BB(这是最基本的要求) 2 根据漏洞分类来判断漏洞触发条件 已有的方法的优缺点selectfuzz某些位置过深,导致程序入口部分的基本块没有距离信息,导致初始fuzz退化为afl无定向 在magam测试中发现,条目:SND025 为什么要构建函数树和BB树好处:">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://dextermorgan0417.github.io/2025/09/21/Paper1/image-20251216104635915.png">
 <meta property="article:published_time" content="2025-09-21T02:02:55.000Z">
-<meta property="article:modified_time" content="2025-12-24T03:30:10.351Z">
+<meta property="article:modified_time" content="2026-05-18T11:56:28.972Z">
 <meta property="article:author" content="Dexter Morgan">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://dextermorgan0417.github.io/2025/09/21/Paper1/image-20251216104635915.png">
@@ -150,6 +150,18 @@
           
           
             <li class="nav-item">
+              <a class="nav-link" href="/program-analysis/" target="_self">
+                <i class="iconfont icon-book-fill"></i>
+                <span>程序分析</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
               <a class="nav-link" href="/directory/" target="_self">
                 <i class="iconfont icon-link-fill"></i>
                 <span>目录索引</span>
@@ -233,7 +245,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.5k 字
+          2.8k 字
         
       </span>
     
@@ -244,7 +256,7 @@
         
         
         
-          21 分钟
+          24 分钟
         
       </span>
     
@@ -300,7 +312,26 @@
               <div class="markdown-body">
                 
                 <h1 id="方向"><a href="#方向" class="headerlink" title="方向"></a>方向</h1><p>定向模糊测试</p>
-<h1 id="已有的方法的优缺点"><a href="#已有的方法的优缺点" class="headerlink" title="已有的方法的优缺点"></a>已有的方法的优缺点</h1><p>已</p>
+<p>结合执行树进行选择性的符号执行和种子调整</p>
+<h1 id="核心目的"><a href="#核心目的" class="headerlink" title="核心目的"></a>核心目的</h1><p>围绕核心目的 漏洞如何触发</p>
+<p>给定漏洞位置 </p>
+<p>触发条件:</p>
+<p>1 到达目标BB(这是最基本的要求)</p>
+<p>2 根据漏洞分类来判断漏洞触发条件</p>
+<h1 id="已有的方法的优缺点"><a href="#已有的方法的优缺点" class="headerlink" title="已有的方法的优缺点"></a>已有的方法的优缺点</h1><h2 id="selectfuzz"><a href="#selectfuzz" class="headerlink" title="selectfuzz"></a>selectfuzz</h2><p>某些位置过深,导致程序入口部分的基本块没有距离信息,导致初始fuzz退化为afl无定向 在magam测试中发现,条目:SND025</p>
+<h1 id="为什么要构建函数树和BB树"><a href="#为什么要构建函数树和BB树" class="headerlink" title="为什么要构建函数树和BB树"></a>为什么要构建函数树和BB树</h1><p>好处:</p>
+<p>分离程序与目标直接能执行和不能执行的代码</p>
+<p>为污点分析<strong>压缩</strong>分析代码空间,</p>
+<p>可能的缺陷:</p>
+<p>构建出的树依然很大,分离程序不可达的BB&#x2F;代码 效果不佳</p>
+<h1 id="数据流分析"><a href="#数据流分析" class="headerlink" title="数据流分析"></a>数据流分析</h1><h2 id="DFS-DataFlowSanitizer"><a href="#DFS-DataFlowSanitizer" class="headerlink" title="DFS(DataFlowSanitizer)"></a>DFS(DataFlowSanitizer)</h2><p>DFS是一个动态数据流跟踪框架</p>
+<h3 id="缺陷"><a href="#缺陷" class="headerlink" title="缺陷"></a>缺陷</h3><p>对“隐式流 &#x2F; 控制流”支持有限</p>
+<p>比如：</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs abnf">if (secret)<br>    y <span class="hljs-operator">=</span> <span class="hljs-number">1</span><span class="hljs-comment">;</span><br>else<br>    y <span class="hljs-operator">=</span> <span class="hljs-number">0</span><span class="hljs-comment">;</span><br></code></pre></td></tr></table></figure>
+
+<p>这里 <code>y</code> 的值其实“依赖” <code>secret</code>，但不是通过直接赋值传播的，而是通过控制流体现。<br> 这种叫 <strong>implicit flow（隐式流）</strong>。</p>
+<p>DFSan 默认更擅长 <strong>显式数据流</strong>，对这种“通过条件影响结果”的依赖，<strong>不是天然完整支持</strong>。<br> 文档里有一些相关选项（比如控制流相关跟踪），但仍不能理解成“所有隐式流都完整覆盖”。</p>
+<p>执行到未插桩的函数&#x2F;代码 会出现传播中断问题</p>
 <h1 id="idea"><a href="#idea" class="headerlink" title="idea"></a>idea</h1><ul>
 <li>select fuzz 结合windranger | halo</li>
 <li>dump调用链,做目标模块化分离,以及输入数据的约束(!)</li>
